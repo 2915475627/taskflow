@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -38,110 +38,89 @@ export function WorkflowCanvas({ className, workflowId }: WorkflowCanvasProps) {
     selectedNodeId,
     selectedEdgeId,
     updateNodePosition,
+    removeNode,
     removeEdge,
-    setNodes: setStoreNodes,
-    setEdges: setStoreEdges,
+    addEdge: addStoreEdge,
   } = useWorkflowStore();
 
+  // Use local state that syncs with ReactFlow
   const [nodes, setNodes, onNodesChange] = useNodesState(storeNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(storeEdges);
-  const isInitialized = useRef(false);
-  const setStoreNodesRef = useRef(setStoreNodes);
-  const setStoreEdgesRef = useRef(setStoreEdges);
 
-  // Keep refs updated
+  // Sync store → local when store changes
   useEffect(() => {
-    setStoreNodesRef.current = setStoreNodes;
-    setStoreEdgesRef.current = setStoreEdges;
-  }, [setStoreNodes, setStoreEdges]);
-
-  // Initialize from store only once
-  useEffect(() => {
-    if (!isInitialized.current && storeNodes.length > 0) {
-      setNodes(storeNodes);
-      isInitialized.current = true;
-    }
+    setNodes(storeNodes);
   }, [storeNodes, setNodes]);
 
   useEffect(() => {
-    if (!isInitialized.current) {
-      setEdges(storeEdges);
-    }
+    setEdges(storeEdges);
   }, [storeEdges, setEdges]);
-
-  // Sync nodes back to store on changes
-  useEffect(() => {
-    if (isInitialized.current) {
-      setStoreNodesRef.current(nodes);
-    }
-  }, [nodes]);
-
-  useEffect(() => {
-    if (isInitialized.current) {
-      setStoreEdgesRef.current(edges);
-    }
-  }, [edges]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
+      if (!connection.source || !connection.target) return;
+
       const newEdge: WorkflowEdge = {
         id: `edge-${Date.now()}`,
-        source: connection.source!,
-        target: connection.target!,
+        source: connection.source,
+        target: connection.target,
         sourceHandle: connection.sourceHandle || undefined,
         targetHandle: connection.targetHandle || undefined,
         edgeType: 'default',
       };
       setEdges((eds) => addEdge(newEdge, eds));
+      addStoreEdge(newEdge);
     },
-    [setEdges]
+    [setEdges, addStoreEdge]
   );
 
-  // Handle node position changes during drag
+  // Handle node position changes
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
       onNodesChange(changes);
 
-      // Update positions in store for nodes that were moved
       changes.forEach((change) => {
-        if (change.type === 'position' && change.position && change.dragging === false) {
-          updateNodePosition(change.id, change.position);
+        if (change.type === 'position' && change.dragging === false && (change.position || change.positionAbsolute)) {
+          updateNodePosition(change.id, change.position || change.positionAbsolute!);
+        }
+        if (change.type === 'remove') {
+          removeNode(change.id);
         }
       });
     },
-    [onNodesChange, updateNodePosition]
+    [onNodesChange, updateNodePosition, removeNode]
   );
 
   const handleEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
       onEdgesChange(changes);
+      changes.forEach((change) => {
+        if (change.type === 'remove') {
+          removeEdge(change.id);
+        }
+      });
     },
-    [onEdgesChange]
+    [onEdgesChange, removeEdge]
   );
 
-  // Handle edge/node selection
+  // Handle selection
   const onSelectionChange: OnSelectionChangeFunc = useCallback(
     ({ nodes: selectedNodes, edges: selectedEdges }) => {
       if (selectedNodes.length === 1) {
         selectNode(selectedNodes[0].id);
-      } else if (selectedNodes.length === 0) {
-        if (selectedEdges.length === 0) {
-          selectNode(null);
-        }
+      } else if (selectedNodes.length === 0 && selectedEdges.length === 0) {
+        selectNode(null);
+        selectEdge(null);
       }
 
       if (selectedEdges.length === 1) {
         selectEdge(selectedEdges[0].id);
-      } else if (selectedEdges.length === 0) {
-        if (selectedNodes.length === 0) {
-          selectEdge(null);
-        }
       }
     },
     [selectNode, selectEdge]
   );
 
-  // Sync selection state to node data for rendering
+  // Add selected state to nodes
   const nodesWithSelection = useMemo(() => {
     return nodes.map((node) => ({
       ...node,
@@ -149,31 +128,36 @@ export function WorkflowCanvas({ className, workflowId }: WorkflowCanvasProps) {
     }));
   }, [nodes, selectedNodeId]);
 
-  // Convert store edges to ReactFlow edges with styling
+  // Style edges
   const styledEdges = useMemo(() => {
-    return edges.map((edge) => {
-      const edgeType = (edge as WorkflowEdge).edgeType || 'default';
-      const style = edgeStyles[edgeType];
-      return {
-        ...edge,
-        style: style,
-        selected: edge.id === selectedEdgeId,
-        label: (edge as WorkflowEdge).label,
-      };
-    });
+    return edges.map((edge) => ({
+      ...edge,
+      style: edgeStyles[(edge as WorkflowEdge).edgeType || 'default'],
+      selected: edge.id === selectedEdgeId,
+    }));
   }, [edges, selectedEdgeId]);
 
-  // Handle edge deletion on keydown
+  // Delete key handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedEdgeId) {
-        removeEdge(selectedEdgeId);
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedNodeId) {
+          removeNode(selectedNodeId);
+          selectNode(null);
+        } else if (selectedEdgeId) {
+          removeEdge(selectedEdgeId);
+          selectEdge(null);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedEdgeId, removeEdge]);
+  }, [selectedNodeId, selectedEdgeId, removeNode, removeEdge, selectNode, selectEdge]);
 
   return (
     <div className={cn('w-full h-full relative', className)}>
@@ -184,6 +168,7 @@ export function WorkflowCanvas({ className, workflowId }: WorkflowCanvasProps) {
         onEdgesChange={handleEdgesChange}
         onConnect={onConnect}
         onSelectionChange={onSelectionChange}
+        onNodeClick={(_, node) => selectNode(node.id)}
         nodeTypes={nodeTypes}
         snapToGrid
         snapGrid={[16, 16]}
@@ -196,57 +181,21 @@ export function WorkflowCanvas({ className, workflowId }: WorkflowCanvasProps) {
         <Toolbar workflowId={workflowId} />
       </ReactFlow>
 
-      {/* Trash drop zone */}
-      <TrashDropZone />
-    </div>
-  );
-}
-
-// Trash drop zone component for deleting nodes by drag
-import React, { useState } from 'react';
-
-function TrashDropZone() {
-  const [isHovering, setIsHovering] = useState(false);
-  const { removeNode, selectNode } = useWorkflowStore();
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsHovering(false);
-      const nodeId = e.dataTransfer.getData('application/reactflow');
-      if (nodeId) {
-        removeNode(nodeId);
-        selectNode(null);
-      }
-    },
-    [removeNode, selectNode]
-  );
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsHovering(true);
-  }, []);
-
-  const handleDragLeave = useCallback(() => {
-    setIsHovering(false);
-  }, []);
-
-  return (
-    <div
-      className={cn(
-        'absolute left-4 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center justify-center w-16 h-32 rounded-lg border-2 border-dashed transition-all duration-200',
-        isHovering
-          ? 'border-red-500 bg-red-500/20 scale-105'
-          : 'border-muted-foreground/30 bg-background/80'
+      {/* Delete button when node is selected */}
+      {selectedNodeId && (
+        <div className="absolute left-4 bottom-4 z-20">
+          <button
+            onClick={() => {
+              removeNode(selectedNodeId);
+              selectNode(null);
+            }}
+            className="flex items-center gap-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="text-sm font-medium">Delete Node</span>
+          </button>
+        </div>
       )}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-    >
-      <Trash2 className={cn('h-6 w-6', isHovering ? 'text-red-500' : 'text-muted-foreground/50')} />
-      <span className={cn('text-xs mt-1', isHovering ? 'text-red-500' : 'text-muted-foreground/50')}>
-        {isHovering ? 'Drop to delete' : 'Drag here'}
-      </span>
     </div>
   );
 }

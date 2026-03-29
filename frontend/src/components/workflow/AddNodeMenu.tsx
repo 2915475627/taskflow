@@ -54,47 +54,23 @@ function createNodeDataForType(type: BuiltInNodeType): WorkflowNodeData {
   }
 }
 
-// Calculate a position that doesn't overlap with existing nodes
-function calculateNewNodePosition(existingNodes: WorkflowNode[], viewport: { x: number; y: number; zoom: number }): { x: number; y: number } {
-  const nodeWidth = 200;
-  const nodeHeight = 80;
-  const padding = 40;
+// Calculate position for new node - simple offset from existing nodes
+function calculateNewNodePosition(existingNodes: WorkflowNode[]): { x: number; y: number } {
+  const baseX = 100;
+  const baseY = 100;
+  const offsetX = 250;
+  const offsetY = 100;
 
-  // Start from center of visible area
-  const centerX = (window.innerWidth / 2 - viewport.x) / viewport.zoom;
-  const centerY = (window.innerHeight / 2 - viewport.y) / viewport.zoom;
-
-  // Try positions in a grid pattern
-  const positions: { x: number; y: number }[] = [];
-  const gridOffsets = [
-    { dx: 0, dy: 0 },
-    { dx: 1, dy: 0 }, { dx: -1, dy: 0 },
-    { dx: 0, dy: 1 }, { dx: 0, dy: -1 },
-    { dx: 1, dy: 1 }, { dx: -1, dy: 1 }, { dx: 1, dy: -1 }, { dx: -1, dy: -1 },
-    { dx: 2, dy: 0 }, { dx: -2, dy: 0 }, { dx: 0, dy: 2 }, { dx: 0, dy: -2 },
-  ];
-
-  for (const offset of gridOffsets) {
-    positions.push({
-      x: centerX + offset.dx * (nodeWidth + padding),
-      y: centerY + offset.dy * (nodeHeight + padding),
-    });
+  if (existingNodes.length === 0) {
+    return { x: baseX, y: baseY };
   }
 
-  // Find the first position that doesn't overlap with any existing node
-  for (const pos of positions) {
-    const hasOverlap = existingNodes.some((node) => {
-      const dx = Math.abs(node.position.x - pos.x);
-      const dy = Math.abs(node.position.y - pos.y);
-      return dx < nodeWidth + padding && dy < nodeHeight + padding;
-    });
-    if (!hasOverlap) {
-      return pos;
-    }
-  }
+  // Find rightmost node and place new node to its right
+  const maxX = Math.max(...existingNodes.map((n) => n.position.x));
+  const sameXNodes = existingNodes.filter((n) => Math.abs(n.position.x - maxX) < 50);
+  const maxYForSameX = Math.max(...sameXNodes.map((n) => n.position.y));
 
-  // Fallback to last position if all overlap
-  return positions[positions.length - 1];
+  return { x: maxX + offsetX, y: maxYForSameX };
 }
 
 export function AddNodeMenu({ className }: AddNodeMenuProps) {
@@ -113,23 +89,24 @@ export function AddNodeMenu({ className }: AddNodeMenuProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleAddNode = useCallback((type: BuiltInNodeType) => {
-    const viewport = getViewport();
-    const position = calculateNewNodePosition(nodes as WorkflowNode[], viewport);
+  const handleAddNode = useCallback(
+    (type: BuiltInNodeType) => {
+      const position = calculateNewNodePosition(nodes as WorkflowNode[]);
 
-    const newNode: WorkflowNode = {
-      id: uuidv4(),
-      type,
-      position,
-      data: createNodeDataForType(type),
-      executionStatus: 'pending',
-    };
+      const newNode: WorkflowNode = {
+        id: uuidv4(),
+        type,
+        position,
+        data: createNodeDataForType(type),
+        executionStatus: 'pending',
+      };
 
-    addNode(newNode);
-    setIsOpen(false);
-  }, [getViewport, nodes, addNode]);
+      addNode(newNode);
+      setIsOpen(false);
+    },
+    [nodes, addNode]
+  );
 
-  // Start and End are special - typically only one of each
   const nodeTypesToAdd = [
     BuiltInNodeType.HTTP_REQUEST,
     BuiltInNodeType.MCP_CALL,
@@ -170,7 +147,7 @@ export function AddNodeMenu({ className }: AddNodeMenuProps) {
 
             <div className="border-t my-2" />
 
-            {/* Special nodes - Start */}
+            {/* Start node */}
             <button
               onClick={() => handleAddNode(BuiltInNodeType.START)}
               className="w-full flex items-center gap-2 px-2 py-2 text-sm hover:bg-muted rounded-md transition-colors"
@@ -179,7 +156,7 @@ export function AddNodeMenu({ className }: AddNodeMenuProps) {
               <span className="font-medium">Start</span>
             </button>
 
-            {/* Special nodes - End */}
+            {/* End node */}
             <button
               onClick={() => handleAddNode(BuiltInNodeType.END)}
               className="w-full flex items-center gap-2 px-2 py-2 text-sm hover:bg-muted rounded-md transition-colors"
