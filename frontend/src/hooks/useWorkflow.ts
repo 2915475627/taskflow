@@ -137,6 +137,13 @@ export function useWorkflow() {
     store.reset();
   }, [store]);
 
+  const setDirty = useCallback(
+    (dirty: boolean) => {
+      store.setDirty(dirty);
+    },
+    [store]
+  );
+
   const executeWorkflow = useCallback(
     async (workflowId: string) => {
       try {
@@ -224,5 +231,6 @@ export function useWorkflow() {
     executeWorkflow,
     pollRunStatus,
     reset,
+    setDirty,
   };
 }

@@ -72,6 +72,35 @@ export interface WorkflowRunStatus {
   nodeOutputs?: Record<string, unknown>;
 }
 
+export interface WorkflowVersionResponse {
+  id: number;
+  version: number;
+  definition: string;
+  changelog?: string;
+  createdAt: string;
+}
+
+export const versionApi = {
+  async create(
+    workflowId: string,
+    definition: string,
+    changelog?: string
+  ): Promise<WorkflowVersionResponse> {
+    const response = await api.post<{ success: boolean; data: WorkflowVersionResponse }>(
+      `/workflows/${workflowId}/versions`,
+      { definition, changelog }
+    );
+    return response.data.data;
+  },
+
+  async list(workflowId: string): Promise<WorkflowVersionResponse[]> {
+    const response = await api.get<{ success: boolean; data: WorkflowVersionResponse[] }>(
+      `/workflows/${workflowId}/versions`
+    );
+    return response.data.data;
+  },
+};
+
 export const executionApi = {
   async execute(workflowId: string): Promise<WorkflowExecuteResponse> {
     const response = await api.post<{ success: boolean; data: WorkflowExecuteResponse }>(

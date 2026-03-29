@@ -54,11 +54,54 @@ function createNodeDataForType(type: BuiltInNodeType): WorkflowNodeData {
   }
 }
 
+// Calculate a position that doesn't overlap with existing nodes
+function calculateNewNodePosition(existingNodes: WorkflowNode[], viewport: { x: number; y: number; zoom: number }): { x: number; y: number } {
+  const nodeWidth = 200;
+  const nodeHeight = 80;
+  const padding = 40;
+
+  // Start from center of visible area
+  const centerX = (window.innerWidth / 2 - viewport.x) / viewport.zoom;
+  const centerY = (window.innerHeight / 2 - viewport.y) / viewport.zoom;
+
+  // Try positions in a grid pattern
+  const positions: { x: number; y: number }[] = [];
+  const gridOffsets = [
+    { dx: 0, dy: 0 },
+    { dx: 1, dy: 0 }, { dx: -1, dy: 0 },
+    { dx: 0, dy: 1 }, { dx: 0, dy: -1 },
+    { dx: 1, dy: 1 }, { dx: -1, dy: 1 }, { dx: 1, dy: -1 }, { dx: -1, dy: -1 },
+    { dx: 2, dy: 0 }, { dx: -2, dy: 0 }, { dx: 0, dy: 2 }, { dx: 0, dy: -2 },
+  ];
+
+  for (const offset of gridOffsets) {
+    positions.push({
+      x: centerX + offset.dx * (nodeWidth + padding),
+      y: centerY + offset.dy * (nodeHeight + padding),
+    });
+  }
+
+  // Find the first position that doesn't overlap with any existing node
+  for (const pos of positions) {
+    const hasOverlap = existingNodes.some((node) => {
+      const dx = Math.abs(node.position.x - pos.x);
+      const dy = Math.abs(node.position.y - pos.y);
+      return dx < nodeWidth + padding && dy < nodeHeight + padding;
+    });
+    if (!hasOverlap) {
+      return pos;
+    }
+  }
+
+  // Fallback to last position if all overlap
+  return positions[positions.length - 1];
+}
+
 export function AddNodeMenu({ className }: AddNodeMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { project } = useReactFlow();
-  const { addNode } = useWorkflowStore();
+  const { getViewport } = useReactFlow();
+  const { addNode, nodes } = useWorkflowStore();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -71,7 +114,8 @@ export function AddNodeMenu({ className }: AddNodeMenuProps) {
   }, []);
 
   const handleAddNode = useCallback((type: BuiltInNodeType) => {
-    const position = project({ x: 250, y: 150 });
+    const viewport = getViewport();
+    const position = calculateNewNodePosition(nodes as WorkflowNode[], viewport);
 
     const newNode: WorkflowNode = {
       id: uuidv4(),
@@ -83,7 +127,7 @@ export function AddNodeMenu({ className }: AddNodeMenuProps) {
 
     addNode(newNode);
     setIsOpen(false);
-  }, [project, addNode]);
+  }, [getViewport, nodes, addNode]);
 
   // Start and End are special - typically only one of each
   const nodeTypesToAdd = [
