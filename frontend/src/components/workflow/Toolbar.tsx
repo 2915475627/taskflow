@@ -80,51 +80,6 @@ export function Toolbar({ className, workflowId }: ToolbarProps) {
           </Button>
         )}
       </div>
-
-      {/* Canvas controls */}
-      <div className="flex flex-col gap-1 bg-background/90 backdrop-blur border rounded-md p-1 shadow-sm">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={handleZoomIn}
-          title="Zoom in"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={handleZoomOut}
-          title="Zoom out"
-        >
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={handleFitView}
-          title="Fit view"
-        >
-          <Move className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={handleToggleFullscreen}
-          title="Toggle fullscreen"
-        >
-          <Maximize className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Zoom level indicator */}
-      <div className="bg-background/90 backdrop-blur border rounded-md px-3 py-1.5 text-xs font-mono shadow-sm">
-        {(viewport.zoom * 100).toFixed(0)}%
-      </div>
     </div>
   );
 }

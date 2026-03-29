@@ -1,5 +1,6 @@
 package com.taskflow.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ public record WorkflowDefinition(
      */
     public record Node(
         String id,
+        @JsonDeserialize(using = NodeTypeDeserializer.class)
         NodeType type,
         String name,
         String description,

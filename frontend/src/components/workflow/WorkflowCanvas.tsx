@@ -160,7 +160,7 @@ export function WorkflowCanvas({ className, workflowId }: WorkflowCanvasProps) {
   }, [selectedNodeId, selectedEdgeId, removeNode, removeEdge, selectNode, selectEdge]);
 
   return (
-    <div className={cn('w-full h-full relative', className)}>
+    <div className={cn('w-full h-full relative !m-0 !p-0', className)}>
       <ReactFlow
         nodes={nodesWithSelection}
         edges={styledEdges}
@@ -174,6 +174,7 @@ export function WorkflowCanvas({ className, workflowId }: WorkflowCanvasProps) {
         snapGrid={[16, 16]}
         deleteKeyCode={null}
         selectionKeyCode={null}
+        fitView
       >
         <Background />
         <Controls />
