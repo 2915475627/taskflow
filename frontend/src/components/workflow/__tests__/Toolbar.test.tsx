@@ -99,31 +99,45 @@ describe('Toolbar', () => {
     expect(mockStopExecution).toHaveBeenCalled();
   });
 
-  // TODO: The following features need to be implemented in Toolbar component
-  // - Zoom controls (zoom-in, zoom-out buttons)
-  // - Zoom percentage display
-  // - Fit view button
-  // - Fullscreen toggle button
-  describe('TODO: Zoom and Fullscreen Controls', () => {
-    it.skip('should render zoom percentage (TODO: not implemented)', () => {
+  // Zoom and Fullscreen Controls
+  describe('Zoom and Fullscreen Controls', () => {
+    it('should render zoom percentage', () => {
       render(<Toolbar />);
       expect(screen.getByText('100%')).toBeInTheDocument();
     });
 
-    it.skip('should render zoom controls (TODO: not implemented)', () => {
+    it('should render zoom controls', () => {
       render(<Toolbar />);
       expect(screen.getByTestId('zoom-in-icon')).toBeInTheDocument();
       expect(screen.getByTestId('zoom-out-icon')).toBeInTheDocument();
     });
 
-    it.skip('should render fit view button (TODO: not implemented)', () => {
+    it('should render fit view button', () => {
       render(<Toolbar />);
       expect(screen.getByTestId('move-icon')).toBeInTheDocument();
     });
 
-    it.skip('should render fullscreen button (TODO: not implemented)', () => {
+    it('should render fullscreen button', () => {
       render(<Toolbar />);
       expect(screen.getByTestId('maximize-icon')).toBeInTheDocument();
+    });
+
+    it('should call zoomIn when zoom in button is clicked', () => {
+      render(<Toolbar />);
+      fireEvent.click(screen.getByTestId('zoom-in-icon'));
+      expect(mockZoomIn).toHaveBeenCalledWith({ duration: 200 });
+    });
+
+    it('should call zoomOut when zoom out button is clicked', () => {
+      render(<Toolbar />);
+      fireEvent.click(screen.getByTestId('zoom-out-icon'));
+      expect(mockZoomOut).toHaveBeenCalledWith({ duration: 200 });
+    });
+
+    it('should call fitView when fit view button is clicked', () => {
+      render(<Toolbar />);
+      fireEvent.click(screen.getByTestId('move-icon'));
+      expect(mockFitView).toHaveBeenCalledWith({ duration: 200, padding: 0.2 });
     });
   });
 });

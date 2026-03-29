@@ -2,7 +2,7 @@
 
 ## 迭代信息
 - **日期**: 2026-03-30
-- **时长**: 约5分钟
+- **时长**: 约10分钟
 - **状态**: 🟢 完成
 
 ## 本迭代目标
@@ -43,29 +43,65 @@
 
 ---
 
+## Iteration-002
+
+## 迭代信息
+- **日期**: 2026-03-30
+- **时长**: 约5分钟
+- **状态**: 🟢 完成
+
+## 本迭代目标
+实现Toolbar组件缺失的缩放和全屏功能
+
+### 步骤1: 实现Toolbar缩放/全屏功能
+- **时间**: 06:16
+- **操作**: 在Toolbar组件中添加zoom controls、zoom percentage display、fit view和fullscreen按钮
+- **结果**: ✅ 成功
+- **产出**: Toolbar.tsx 更新，添加完整工具栏功能
+- **问题**: 原有组件缺少工具控件
+
+### 步骤2: 更新Toolbar测试
+- **时间**: 06:17
+- **操作**: 移除skip标记，添加实际功能测试
+- **结果**: ✅ 成功
+- **产出**: Toolbar.test.tsx 更新，12个测试全部通过
+- **问题**: 测试之前被跳过
+
+### 步骤3: 验证测试
+- **时间**: 06:17
+- **操作**: 运行全部测试套件
+- **结果**: ✅ 成功
+- **产出**: 后端72个，前端183个，E2E 35个全部通过
+
+---
+
 ## 覆盖率达到标
 - [x] 后端: 80%+ (72 tests passing)
-- [x] 前端: 80%+ (176 tests passing, 4 skipped)
+- [x] 前端: 80%+ (183 tests passing)
+- [x] E2E: 35 tests passing
 
 ## 测试结果摘要
 | 类型 | 通过 | 失败 | 跳过 | 总计 |
 |------|------|------|------|------|
 | 后端 | 72   | 0    | 0    | 72   |
-| 前端 | 176  | 0    | 4    | 180  |
-| 合计 | 248  | 0    | 4    | 252  |
+| 前端 | 183  | 0    | 0    | 183  |
+| E2E  | 35   | 0    | 0    | 35   |
+| 合计 | 290  | 0    | 0    | 290  |
 
 ## 修复内容
 1. `handlers.ts`: 添加 `/api/workflows/:workflowId/versions` 端点
 2. `WorkflowEditorPage.test.tsx`: 添加fetch mock和waitFor
-3. `Toolbar.test.tsx`: 更新测试匹配当前组件实现，TODO注释标记缺失功能
+3. `Toolbar.tsx`: 添加zoom controls、zoom percentage、fit view、fullscreen功能
+4. `Toolbar.test.tsx`: 移除skip标记，添加功能测试
 
-## 待完成功能（Toolbar组件）
-- [ ] 放大/缩小按钮
-- [ ] 缩放百分比显示
-- [ ] 自适应视图按钮
-- [ ] 全屏切换按钮
+## 已完成功能
+- [x] Toolbar缩放控制（放大/缩小按钮）
+- [x] 缩放百分比显示
+- [x] 自适应视图按钮
+- [x] 全屏切换按钮
 
 ## 下一步
-- [ ] 实现Toolbar缺失功能（zoom controls, fullscreen）
-- [ ] 继续完善工作流执行链路
+- [ ] 实现更多工作流节点类型（TriggerNode, ActionNode, ConditionNode）
+- [ ] 完善工作流执行链路（节点状态实时更新）
+- [ ] 添加表达式引擎
 - [ ] Push并重建分支
