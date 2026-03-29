@@ -3,7 +3,12 @@ package com.taskflow.controller;
 import com.taskflow.dto.ApiResponse;
 import com.taskflow.dto.WorkflowRequest;
 import com.taskflow.dto.WorkflowResponse;
+import com.taskflow.dto.WorkflowVersionResponse;
+import com.taskflow.dto.WorkflowRunResponse;
+import com.taskflow.dto.VersionCreateRequest;
+import com.taskflow.dto.RunCreateRequest;
 import com.taskflow.entity.WorkflowStatus;
+import com.taskflow.entity.WorkflowRun.RunStatus;
 import com.taskflow.service.WorkflowService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -75,5 +80,70 @@ public class WorkflowController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         workflowService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ==================== Version Endpoints ====================
+
+    @GetMapping("/{id}/versions")
+    public ResponseEntity<ApiResponse<java.util.List<WorkflowVersionResponse>>> listVersions(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int limit
+    ) {
+        Pageable pageable = PageRequest.of(page, limit, Sort.by("version").descending());
+        Page<WorkflowVersionResponse> versions = workflowService.listVersions(id, pageable);
+
+        ApiResponse.Meta meta = new ApiResponse.Meta(
+                (int) versions.getTotalElements(),
+                versions.getNumber(),
+                versions.getSize()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(versions.getContent(), meta));
+    }
+
+    @PostMapping("/{id}/versions")
+    public ResponseEntity<ApiResponse<WorkflowVersionResponse>> createVersion(
+            @PathVariable Long id,
+            @RequestBody VersionCreateRequest request
+    ) {
+        WorkflowVersionResponse version = workflowService.createVersion(id, request.definition(), request.changelog());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(version));
+    }
+
+    // ==================== Run Endpoints ====================
+
+    @GetMapping("/{id}/runs")
+    public ResponseEntity<ApiResponse<java.util.List<WorkflowRunResponse>>> listRuns(
+            @PathVariable Long id,
+            @RequestParam(required = false) RunStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int limit
+    ) {
+        Pageable pageable = PageRequest.of(page, limit, Sort.by("createdAt").descending());
+        Page<WorkflowRunResponse> runs = workflowService.listRuns(id, status, pageable);
+
+        ApiResponse.Meta meta = new ApiResponse.Meta(
+                (int) runs.getTotalElements(),
+                runs.getNumber(),
+                runs.getSize()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(runs.getContent(), meta));
+    }
+
+    @PostMapping("/{id}/runs")
+    public ResponseEntity<ApiResponse<WorkflowRunResponse>> createRun(
+            @PathVariable Long id,
+            @RequestBody RunCreateRequest request
+    ) {
+        WorkflowRunResponse run = workflowService.createRun(id, request.inputData());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(run));
+    }
+
+    @GetMapping("/runs/{executionId}")
+    public ResponseEntity<ApiResponse<WorkflowRunResponse>> getRunByExecutionId(@PathVariable String executionId) {
+        WorkflowRunResponse run = workflowService.getRunByExecutionId(executionId);
+        return ResponseEntity.ok(ApiResponse.success(run));
     }
 }

@@ -8,6 +8,9 @@ import com.taskflow.entity.WorkflowStatus;
 import com.taskflow.exception.ResourceNotFoundException;
 import com.taskflow.exception.ValidationException;
 import com.taskflow.repository.WorkflowRepository;
+import com.taskflow.repository.TenantRepository;
+import com.taskflow.repository.WorkflowVersionRepository;
+import com.taskflow.repository.WorkflowRunRepository;
 import com.taskflow.security.TenantContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +42,15 @@ class WorkflowServiceTest {
 
     @Mock
     private WorkflowRepository workflowRepository;
+
+    @Mock
+    private TenantRepository tenantRepository;
+
+    @Mock
+    private WorkflowVersionRepository workflowVersionRepository;
+
+    @Mock
+    private WorkflowRunRepository workflowRunRepository;
 
     @InjectMocks
     private WorkflowService workflowService;
@@ -119,6 +131,7 @@ class WorkflowServiceTest {
     void create_shouldSaveAndReturnWorkflow() {
         WorkflowRequest request = new WorkflowRequest("New Workflow", "New Description", null, null);
         when(workflowRepository.existsByTenantIdAndName(TENANT_ID, "New Workflow")).thenReturn(false);
+        when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant));
         when(workflowRepository.save(any(Workflow.class))).thenAnswer(inv -> {
             Workflow w = inv.getArgument(0);
             w.setId(101L);
@@ -133,6 +146,7 @@ class WorkflowServiceTest {
         assertThat(result.description()).isEqualTo("New Description");
         assertThat(result.status()).isEqualTo(WorkflowStatus.DRAFT);
         verify(workflowRepository).existsByTenantIdAndName(TENANT_ID, "New Workflow");
+        verify(tenantRepository).findById(TENANT_ID);
         verify(workflowRepository).save(any(Workflow.class));
     }
 
