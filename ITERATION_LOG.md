@@ -75,6 +75,70 @@
 
 ---
 
+## Iteration-003
+
+## 迭代信息
+- **日期**: 2026-03-30
+- **时长**: 约5分钟
+- **状态**: 🟢 完成
+
+## 本迭代目标
+增加ConditionNodeExecutor测试覆盖率
+
+### 步骤1: 添加边界情况测试
+- **时间**: 06:23
+- **操作**: 添加8个新测试覆盖边界情况
+- **结果**: ✅ 成功
+- **产出**: ConditionNodeExecutorTest: 5 -> 13 tests
+- **测试覆盖**:
+  - Empty conditions
+  - Nested field paths (data.status)
+  - Null value handling
+  - neq operator
+  - Comparison operators (gt, lt, gte, lte)
+  - startsWith and endsWith operators
+  - Invalid operator handling
+
+### 步骤2: 验证测试
+- **时间**: 06:24
+- **操作**: 运行全部后端测试
+- **结果**: ✅ 成功
+- **产出**: 后端测试 72 -> 80 (新增8个)
+
+---
+
+## Iteration-002
+
+## 迭代信息
+- **日期**: 2026-03-30
+- **时长**: 约5分钟
+- **状态**: 🟢 完成
+
+## 本迭代目标
+实现Toolbar组件缺失的缩放和全屏功能
+
+### 步骤1: 实现Toolbar缩放/全屏功能
+- **时间**: 06:16
+- **操作**: 在Toolbar组件中添加zoom controls、zoom percentage display、fit view和fullscreen按钮
+- **结果**: ✅ 成功
+- **产出**: Toolbar.tsx 更新，添加完整工具栏功能
+- **问题**: 原有组件缺少工具控件
+
+### 步骤2: 更新Toolbar测试
+- **时间**: 06:17
+- **操作**: 移除skip标记，添加实际功能测试
+- **结果**: ✅ 成功
+- **产出**: Toolbar.test.tsx 更新，12个测试全部通过
+- **问题**: 测试之前被跳过
+
+### 步骤3: 验证测试
+- **时间**: 06:17
+- **操作**: 运行全部测试套件
+- **结果**: ✅ 成功
+- **产出**: 后端72个，前端183个，E2E 35个全部通过
+
+---
+
 ## 覆盖率达到标
 - [x] 后端: 80%+ (72 tests passing)
 - [x] 前端: 80%+ (183 tests passing)
