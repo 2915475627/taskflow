@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas';
+import { WorkflowCanvas, NodePanel } from '@/components/workflow';
 import { Button } from '@/components/ui';
 import { useWorkflowStore, useUIStore } from '@/stores';
 import { useWorkflow } from '@/hooks/useWorkflow';
@@ -9,7 +9,9 @@ export function WorkflowEditorPage() {
   const { workflowId } = useParams();
   const navigate = useNavigate();
   const { nodes, edges, isDirty } = useWorkflow();
+  const { selectedNodeId } = useWorkflowStore();
   const { openDeployDialog } = useUIStore();
+  const { reset } = useWorkflowStore();
 
   const handleSave = async () => {
     // TODO: Implement save
@@ -21,7 +23,10 @@ export function WorkflowEditorPage() {
       {/* Header */}
       <header className="border-b px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+          <Button variant="ghost" size="icon" onClick={() => {
+            reset();
+            navigate('/');
+          }}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="font-semibold">
@@ -44,9 +49,12 @@ export function WorkflowEditorPage() {
         </div>
       </header>
 
-      {/* Canvas */}
-      <main className="flex-1">
-        <WorkflowCanvas />
+      {/* Canvas with NodePanel */}
+      <main className="flex-1 flex">
+        <div className="flex-1">
+          <WorkflowCanvas />
+        </div>
+        {selectedNodeId && <NodePanel />}
       </main>
     </div>
   );

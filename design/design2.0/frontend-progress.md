@@ -1,11 +1,11 @@
-# Frontend M1 Progress
+# Frontend M1-M2 Progress
 
 **Created**: 2026-03-29
-**Status**: COMPLETED
+**Status**: M1 COMPLETED, M2 IN PROGRESS
 
 ---
 
-## M1: 基础框架 (第 1-2 周)
+## M1: 基础框架 (第 1-2 周) - COMPLETED
 
 **目标**: 搭建项目骨架、配置开发环境
 
@@ -23,21 +23,82 @@
 | Vitest + RTL + MSW 测试配置 | [x] | 测试环境配置 (setupTests.ts, vite.config.ts) |
 | React Router 路由配置 | [x] | 路由定义 (routes/index.tsx) |
 
-### TDD 进度
+---
 
-| 文件 | 测试状态 | 实现状态 |
-|------|----------|----------|
-| types/workflow.ts | [x] | [x] |
-| stores/workflowStore.ts | [x] | [x] |
-| stores/uiStore.ts | [x] | [x] |
-| components/ui/Button.tsx | [x] | [x] |
-| components/ui/Dialog.tsx | [x] | [x] |
-| components/ui/DropdownMenu.tsx | [x] | [x] |
-| components/workflow/WorkflowCanvas.tsx | [x] | [x] |
-| hooks/useWorkflow.ts | [x] | [x] |
-| services/api.ts | [x] | [x] |
+## M2: 节点面板 (第 2-3 周) - IN PROGRESS
 
-### 项目结构
+**目标**: 实现流程编辑器核心 UI
+
+**开始日期**: 2026-03-29
+
+### 迭代 1 交付物
+
+| 交付项 | 状态 | 说明 |
+|--------|------|------|
+| WorkflowListPage CRUD Modal | [x] | 使用 Radix Dialog 重构 |
+| Create Workflow Modal | [x] | 使用 React Query mutation |
+| Delete Confirmation Modal | [x] | 使用 React Query mutation |
+| NodePanel 组件 | [x] | 节点配置面板基础实现 |
+| TriggerConfig | [x] | 触发器配置表单 |
+| ActionConfig | [x] | 动作配置表单 |
+| ConditionConfig | [x] | 条件配置表单 |
+| 单元测试 | [x] | 89 tests passing |
+| E2E 测试 | [x] | 15 tests passing |
+
+### 新增/修改文件
+
+#### 组件
+- `src/components/workflow/NodePanel.tsx` - 新增节点配置面板
+- `src/components/workflow/index.ts` - 导出 NodePanel
+
+#### 页面
+- `src/pages/WorkflowListPage.tsx` - 重构使用 Radix Dialog
+- `src/pages/WorkflowEditorPage.tsx` - 集成 NodePanel
+
+#### 测试
+- `src/components/workflow/__tests__/NodePanel.test.tsx` - 新增 11 tests
+- `src/pages/__tests__/WorkflowListPage.test.tsx` - 新增 10 tests
+- `src/pages/__tests__/WorkflowEditorPage.test.tsx` - 新增 5 tests
+
+### 测试结果
+
+```
+Unit Tests: 89 passed
+E2E Tests: 15 passed
+```
+
+### E2E 测试覆盖
+
+- Workflow List Page: 4 tests
+  - Load page with heading
+  - Display workflows after loading
+  - Create new workflow button
+  - Navigate to editor on create
+
+- Workflow Editor Page: 7 tests
+  - Load editor page
+  - Header with buttons
+  - Edit workflow mode
+  - Navigate back to list
+  - Display canvas, controls, minimap
+
+- Navigation: 4 tests
+  - Home to editor navigation
+  - Editor to home navigation
+  - Specific workflow editor
+  - URL state preservation
+
+### 待完成
+
+- [ ] 触发器节点 (TriggerNode) 实现
+- [ ] 动作节点 (ActionNode) 实现
+- [ ] 条件节点 (ConditionNode) 实现
+- [ ] 节点拖拽添加
+- [ ] 节点间连线
+
+---
+
+## 项目结构
 
 ```
 frontend/
@@ -51,6 +112,7 @@ frontend/
 │   │   │   └── index.ts
 │   │   └── workflow/              # 流程编辑器组件
 │   │       ├── WorkflowCanvas.tsx
+│   │       ├── NodePanel.tsx     # 新增
 │   │       └── index.ts
 │   ├── features/
 │   │   └── editor/                # 编辑器功能模块
@@ -73,33 +135,28 @@ frontend/
 │   ├── pages/                     # 页面组件
 │   │   ├── WorkflowEditorPage.tsx
 │   │   ├── WorkflowListPage.tsx
-│   │   └── index.ts
+│   │   └── __tests__/            # 新增测试
+│   │       ├── WorkflowListPage.test.tsx
+│   │       └── WorkflowEditorPage.test.tsx
 │   ├── routes/                    # 路由配置
 │   │   └── index.tsx
 │   ├── mocks/                     # MSW mocks
-│   │   ├── handlers.ts
-│   │   ├── browser.ts
-│   │   └── index.ts
 │   ├── lib/
 │   │   └── utils.ts
 │   ├── App.tsx
 │   ├── main.tsx
-│   ├── index.css
-│   ├── setupTests.ts
-│   └── vite-env.d.ts
-├── package.json
-├── vite.config.ts
-├── tsconfig.json
-├── tsconfig.node.json
-├── tailwind.config.js
-├── postcss.config.js
-└── .eslintrc.cjs
+│   └── setupTests.ts
+├── e2e/                           # Playwright E2E 测试
+│   ├── workflow-list.spec.ts
+│   ├── workflow-editor.spec.ts
+│   └── navigation.spec.ts
+└── playwright.config.ts
 ```
 
 ---
 
-## M2-M5
+## M3-M5
 
-(M2-M5 待 M1 完成后启动)
+(M3-M5 待 M2 完成后启动)
 
 ---
