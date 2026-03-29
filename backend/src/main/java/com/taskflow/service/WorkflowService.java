@@ -4,17 +4,22 @@ import com.taskflow.dto.WorkflowRequest;
 import com.taskflow.dto.WorkflowResponse;
 import com.taskflow.dto.WorkflowVersionResponse;
 import com.taskflow.dto.WorkflowRunResponse;
+import com.taskflow.dto.ExecutionResponse;
+import com.taskflow.dto.WebhookConfigResponse;
 import com.taskflow.entity.Workflow;
 import com.taskflow.entity.WorkflowStatus;
 import com.taskflow.entity.WorkflowVersion;
 import com.taskflow.entity.WorkflowRun;
 import com.taskflow.entity.Tenant;
+import com.taskflow.entity.WebhookConfig;
+import com.taskflow.entity.WorkflowRun.RunStatus;
 import com.taskflow.exception.ResourceNotFoundException;
 import com.taskflow.exception.ValidationException;
 import com.taskflow.repository.WorkflowRepository;
 import com.taskflow.repository.TenantRepository;
 import com.taskflow.repository.WorkflowVersionRepository;
 import com.taskflow.repository.WorkflowRunRepository;
+import com.taskflow.repository.WebhookConfigRepository;
 import com.taskflow.security.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,16 +38,22 @@ public class WorkflowService {
     private final TenantRepository tenantRepository;
     private final WorkflowVersionRepository workflowVersionRepository;
     private final WorkflowRunRepository workflowRunRepository;
+    private final WebhookConfigRepository webhookConfigRepository;
+    private final ExecutionEngineService executionEngineService;
 
     public WorkflowService(
             WorkflowRepository workflowRepository,
             TenantRepository tenantRepository,
             WorkflowVersionRepository workflowVersionRepository,
-            WorkflowRunRepository workflowRunRepository) {
+            WorkflowRunRepository workflowRunRepository,
+            WebhookConfigRepository webhookConfigRepository,
+            ExecutionEngineService executionEngineService) {
         this.workflowRepository = workflowRepository;
         this.tenantRepository = tenantRepository;
         this.workflowVersionRepository = workflowVersionRepository;
         this.workflowRunRepository = workflowRunRepository;
+        this.webhookConfigRepository = webhookConfigRepository;
+        this.executionEngineService = executionEngineService;
     }
 
     @Transactional(readOnly = true)
@@ -226,6 +237,95 @@ public class WorkflowService {
         }
 
         return WorkflowRunResponse.from(run);
+    }
+
+    // ==================== Execution ====================
+
+    public ExecutionResponse executeWorkflow(Long workflowId, String inputData) {
+        Long tenantId = getCurrentTenantId();
+        log.info("execute_workflow workflowId={} tenantId={}", workflowId, tenantId);
+
+        Workflow workflow = workflowRepository.findByIdAndTenantId(workflowId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workflow not found with id: " + workflowId));
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + tenantId));
+
+        String executionId = java.util.UUID.randomUUID().toString();
+
+        WorkflowRun run = new WorkflowRun(workflow, workflow.getCurrentVersion(), executionId, tenant);
+        run.setInputData(inputData);
+        run.setStatus(RunStatus.PENDING);
+        run.setCreatedAt(java.time.Instant.now());
+
+        WorkflowRun saved = workflowRunRepository.save(run);
+
+        // Trigger async execution
+        try {
+            executionEngineService.executeRun(saved.getId());
+        } catch (Exception e) {
+            log.error("Execution failed for run {}: {}", saved.getId(), e.getMessage());
+        }
+
+        log.info("execution_started workflowId={} executionId={}", workflowId, executionId);
+
+        return new ExecutionResponse(saved.getId(), executionId, RunStatus.PENDING, "Execution started");
+    }
+
+    // ==================== Webhook Configuration ====================
+
+    public WebhookConfigResponse configureWebhook(Long workflowId, String callbackUrl, String secret) {
+        Long tenantId = getCurrentTenantId();
+        log.info("configure_webhook workflowId={} tenantId={} url={}", workflowId, tenantId, callbackUrl);
+
+        Workflow workflow = workflowRepository.findByIdAndTenantId(workflowId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workflow not found with id: " + workflowId));
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + tenantId));
+
+        // Check if webhook config already exists
+        WebhookConfig config = webhookConfigRepository
+                .findByWorkflowIdAndTenantId(workflowId, tenantId)
+                .orElse(new WebhookConfig());
+
+        config.setWorkflow(workflow);
+        config.setTenant(tenant);
+        config.setCallbackUrl(callbackUrl);
+        config.setSecret(secret);
+        config.setEnabled(true);
+        config.setCreatedAt(java.time.Instant.now());
+        config.setUpdatedAt(java.time.Instant.now());
+
+        WebhookConfig saved = webhookConfigRepository.save(config);
+
+        log.info("webhook_configured workflowId={}", workflowId);
+        return WebhookConfigResponse.from(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public WebhookConfigResponse getWebhookConfig(Long workflowId) {
+        Long tenantId = getCurrentTenantId();
+        log.debug("get_webhook_config workflowId={} tenantId={}", workflowId, tenantId);
+
+        WebhookConfig config = webhookConfigRepository
+                .findByWorkflowIdAndTenantId(workflowId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Webhook config not found for workflow: " + workflowId));
+
+        return WebhookConfigResponse.from(config);
+    }
+
+    public void deleteWebhookConfig(Long workflowId) {
+        Long tenantId = getCurrentTenantId();
+        log.info("delete_webhook_config workflowId={} tenantId={}", workflowId, tenantId);
+
+        WebhookConfig config = webhookConfigRepository
+                .findByWorkflowIdAndTenantId(workflowId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Webhook config not found for workflow: " + workflowId));
+
+        webhookConfigRepository.delete(config);
+
+        log.info("webhook_config_deleted workflowId={}", workflowId);
     }
 
     private Long getCurrentTenantId() {

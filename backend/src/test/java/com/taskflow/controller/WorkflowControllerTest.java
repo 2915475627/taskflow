@@ -3,7 +3,10 @@ package com.taskflow.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskflow.dto.WorkflowRequest;
 import com.taskflow.dto.WorkflowResponse;
+import com.taskflow.dto.WorkflowRunResponse;
+import com.taskflow.dto.ExecutionResponse;
 import com.taskflow.entity.WorkflowStatus;
+import com.taskflow.entity.WorkflowRun.RunStatus;
 import com.taskflow.exception.ResourceNotFoundException;
 import com.taskflow.exception.ValidationException;
 import com.taskflow.security.TenantContext;
@@ -12,7 +15,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -31,7 +35,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(WorkflowController.class)
+@SpringBootTest
+@AutoConfigureMockMvc(addFilters = false)
 class WorkflowControllerTest {
 
     private static final Long TENANT_ID = 1L;
@@ -208,6 +213,35 @@ class WorkflowControllerTest {
 
         mockMvc.perform(delete("/api/workflows/{id}", WORKFLOW_ID)
                         .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    // ==================== Execution Endpoint Tests ====================
+
+    @Test
+    void executeWorkflow_shouldStartExecution() throws Exception {
+        String executionId = "test-execution-123";
+        ExecutionResponse response = new ExecutionResponse(1L, executionId, RunStatus.PENDING, "Execution started");
+        when(workflowService.executeWorkflow(eq(WORKFLOW_ID), any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/workflows/{id}/execute", WORKFLOW_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.executionId").value(executionId))
+                .andExpect(jsonPath("$.data.status").value("PENDING"));
+    }
+
+    @Test
+    void executeWorkflow_shouldReturn404_whenWorkflowNotFound() throws Exception {
+        when(workflowService.executeWorkflow(eq(999L), any()))
+                .thenThrow(new ResourceNotFoundException("Workflow not found"));
+
+        mockMvc.perform(post("/api/workflows/{id}/execute", 999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false));
     }

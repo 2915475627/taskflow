@@ -1290,3 +1290,63 @@ public class TestDataCleanup {
 **创建日期**: 2026-03-29
 **相关Skill**: tdd-workflow, springboot-tdd, go-test
 **建议Agent**: tdd-guide, code-reviewer, e2e-runner, build-error-resolver
+
+---
+
+## 十一、Iteration 1 测试结果 (2026-03-29)
+
+### 11.1 API 测试结果
+
+| 端点 | 方法 | 状态 | 响应时间 |
+|------|------|------|----------|
+| `/api/workflows` | GET | ✅ 正常 | 返回 2 条工作流 |
+| `/api/workflows` | POST | ✅ 正常 | 成功创建，ID=4 |
+| `/api/workflows/{id}` | DELETE | ✅ 正常 | 删除成功 |
+
+### 11.2 E2E 测试结果
+
+**测试环境**:
+- Backend: `http://localhost:8080`
+- Frontend: `http://localhost:5173`
+- 浏览器: Chromium
+
+**测试套件**: 15 tests
+- ✅ 全部通过 (15/15)
+- 失败: 0
+
+**测试文件**:
+- `e2e/workflow-list.spec.ts` - 4 tests
+- `e2e/workflow-editor.spec.ts` - 6 tests
+- `e2e/navigation.spec.ts` - 5 tests
+
+**Create/Edit/Delete 流程测试**:
+```
+[✓] Load workflow list page
+[✓] Display workflows after loading
+[✓] Create new workflow button visible
+[✓] Navigate to editor after create form submit
+[✓] Workflow editor page loads
+[✓] Navigate from editor to home via back button
+[✓] Navigate to specific workflow editor
+[✓] Maintain URL state when refreshing page
+```
+
+### 11.3 发现的问题及修复
+
+**问题 1: E2E 测试断言错误**
+- **现象**: 测试期望点击 "Create New Workflow" 按钮后直接导航到 `/editor`
+- **实际**: 按钮点击后打开模态框，填写表单提交后才导航
+- **修复**: 更新测试以匹配实际 UX 流程 - 需要 mock POST API 并填写表单
+
+**问题 2: 测试数据不匹配**
+- **现象**: 测试期望 "Sample Workflow" 但 API 返回 "Test Workflow"
+- **修复**: 添加 API mock 明确返回 "Test Workflow"
+
+### 11.4 Git 提交
+
+```
+feature/iteration-1-testing
+├── e2e/workflow-list.spec.ts (fixed)
+├── e2e/navigation.spec.ts (fixed)
+└── design/design2.0/integration-test.md (updated)
+```

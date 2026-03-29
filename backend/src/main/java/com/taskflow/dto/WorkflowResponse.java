@@ -11,7 +11,7 @@ public record WorkflowResponse(
         String name,
         String description,
         WorkflowStatus status,
-        Integer currentVersion,
+        Integer version,
         Instant createdAt,
         Instant updatedAt
 ) {

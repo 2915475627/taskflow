@@ -5,6 +5,7 @@ import com.taskflow.dto.WorkflowRequest;
 import com.taskflow.dto.WorkflowResponse;
 import com.taskflow.dto.WorkflowVersionResponse;
 import com.taskflow.dto.WorkflowRunResponse;
+import com.taskflow.dto.ExecutionResponse;
 import com.taskflow.dto.VersionCreateRequest;
 import com.taskflow.dto.RunCreateRequest;
 import com.taskflow.entity.WorkflowStatus;
@@ -145,5 +146,16 @@ public class WorkflowController {
     public ResponseEntity<ApiResponse<WorkflowRunResponse>> getRunByExecutionId(@PathVariable String executionId) {
         WorkflowRunResponse run = workflowService.getRunByExecutionId(executionId);
         return ResponseEntity.ok(ApiResponse.success(run));
+    }
+
+    // ==================== Execution Endpoint ====================
+
+    @PostMapping("/{id}/execute")
+    public ResponseEntity<ApiResponse<ExecutionResponse>> executeWorkflow(
+            @PathVariable Long id,
+            @RequestBody(required = false) RunCreateRequest request
+    ) {
+        ExecutionResponse response = workflowService.executeWorkflow(id, request != null ? request.inputData() : null);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

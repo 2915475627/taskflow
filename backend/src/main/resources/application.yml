@@ -4,8 +4,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/taskflow
-    username: postgres
-    password: postgres
+    username: taskflow
+    password: taskflow
     driver-class-name: org.postgresql.Driver
 
   jpa:

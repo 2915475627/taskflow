@@ -6,6 +6,27 @@ import { WorkflowEditorPage } from '../WorkflowEditorPage';
 import { useWorkflow } from '@/hooks/useWorkflow';
 import { useWorkflowStore, useUIStore } from '@/stores';
 
+// Mock reactflow to avoid useReactFlow error
+vi.mock('reactflow', () => ({
+  default: ({ children, ...props }: { children: React.ReactNode }) => (
+    <div data-testid="react-flow-mock">{children}</div>
+  ),
+  ReactFlowProvider: ({ children }: { children: React.ReactNode }) => children,
+  Handle: () => <div data-testid="handle-mock" />,
+  Background: () => <div data-testid="background-mock" />,
+  Controls: () => <div data-testid="controls-mock" />,
+  MiniMap: () => <div data-testid="mini-map-mock" />,
+  useNodesState: vi.fn(() => [[], vi.fn(), vi.fn()]),
+  useEdgesState: vi.fn(() => [[], vi.fn(), vi.fn()]),
+  useReactFlow: vi.fn(() => ({
+    zoomIn: vi.fn(),
+    zoomOut: vi.fn(),
+    fitView: vi.fn(),
+    getViewport: vi.fn(() => ({ x: 0, y: 0, zoom: 1 })),
+  })),
+  addEdge: vi.fn(),
+}));
+
 // Mock stores
 const mockSelectNode = vi.fn();
 const mockReset = vi.fn();
