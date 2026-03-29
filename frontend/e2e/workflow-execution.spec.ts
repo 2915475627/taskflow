@@ -215,28 +215,38 @@ test.describe('Workflow Execution - Complete Chain', () => {
   });
 
   test('6. Save workflow', async ({ page }) => {
-    await page.goto('/editor/new-workflow-123');
+    // Go to editor without workflowId (creates new workflow)
+    await page.goto('/editor');
     await page.waitForLoadState('networkidle');
+    await expect(page.locator('h1')).toContainText('New Workflow');
 
     // Add a node to make dirty
     await addNode(page, 'End');
 
-    // Click save
+    // Click save - this will create the workflow and redirect
     const saveButton = page.locator('button:has-text("Save")');
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(2000);
+
+    // Should redirect to editor with workflow ID
+    await expect(page.url()).toContain('/editor/');
   });
 
   test('7. Execute workflow with play button', async ({ page }) => {
-    await page.goto('/editor/new-workflow-123');
+    // Go to editor without workflowId
+    await page.goto('/editor');
     await page.waitForLoadState('networkidle');
 
     // Add nodes
     await addNode(page, 'Start');
     await addNode(page, 'End');
 
-    // Execute button should be visible
+    // Save first
+    await page.locator('button:has-text("Save")').click();
+    await page.waitForTimeout(2000);
+
+    // Execute button should be visible (now with workflowId)
     const executeButton = page.locator('button[title="Start execution"]');
     await expect(executeButton).toBeVisible();
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { WorkflowCanvas, NodePanel } from '@/components/workflow';
 import { Button } from '@/components/ui';
@@ -6,14 +6,72 @@ import { useWorkflowStore, useUIStore } from '@/stores';
 import { useWorkflow } from '@/hooks/useWorkflow';
 import { ArrowLeft, Save, Play } from 'lucide-react';
 import { workflowApi, versionApi } from '@/services/api';
+import type { WorkflowNode, WorkflowEdge } from '@/types';
+import { BuiltInNodeType } from '@/types';
 
 export function WorkflowEditorPage() {
   const { workflowId } = useParams();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const { nodes, edges, isDirty, setDirty } = useWorkflow();
-  const { selectedNodeId } = useWorkflowStore();
+  const { selectedNodeId, setNodes, setEdges } = useWorkflowStore();
   const { openDeployDialog } = useUIStore();
   const { reset } = useWorkflowStore();
+
+  // Load workflow version when workflowId changes
+  useEffect(() => {
+    if (!workflowId) return;
+
+    const loadWorkflow = async () => {
+      setIsLoading(true);
+      try {
+        const versions = await versionApi.list(workflowId);
+        if (versions.length > 0) {
+          // Sort by version descending to get latest
+          const sortedVersions = [...versions].sort((a, b) => b.version - a.version);
+          const latestVersion = sortedVersions[0];
+          const definition = JSON.parse(latestVersion.definition);
+
+          // Convert definition to WorkflowNode/WorkflowEdge
+          const loadedNodes: WorkflowNode[] = definition.nodes.map((node: any) => ({
+            id: node.id,
+            type: node.type,
+            position: { x: node.position?.x || 100, y: node.position?.y || 100 },
+            data: {
+              name: node.name,
+              description: node.description || '',
+              config: node.config || {},
+            },
+            executionStatus: 'pending' as const,
+          }));
+
+          const loadedEdges: WorkflowEdge[] = definition.edges.map((edge: any) => ({
+            id: edge.id,
+            source: edge.source,
+            target: edge.target,
+            sourceHandle: edge.sourceHandle,
+            targetHandle: edge.targetHandle,
+            edgeType: 'default' as const,
+          }));
+
+          setNodes(loadedNodes);
+          setEdges(loadedEdges);
+          setDirty(false);
+        }
+      } catch (error) {
+        console.error('Failed to load workflow:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadWorkflow();
+  }, [workflowId]);
+
+  // Debug useEffect
+  useEffect(() => {
+    console.log('isLoading changed to:', isLoading);
+  }, [isLoading]);
 
   // Build workflow definition matching backend WorkflowDefinition format
   const buildDefinition = useCallback(() => {
@@ -49,7 +107,7 @@ export function WorkflowEditorPage() {
         const definition = buildDefinition();
         await versionApi.create(workflow.id, JSON.stringify(definition), 'Initial version');
         setDirty(false);
-        navigate(`/workflow/${workflow.id}`, { replace: true });
+        navigate(`/editor/${workflow.id}`, { replace: true });
       } catch (error) {
         console.error('Failed to create workflow:', error);
       }
@@ -78,6 +136,7 @@ export function WorkflowEditorPage() {
           </Button>
           <h1 className="font-semibold">
             {workflowId ? 'Edit Workflow' : 'New Workflow'}
+            {isLoading && ' (loading...)'}
           </h1>
           {isDirty && (
             <span className="text-xs text-muted-foreground">(unsaved changes)</span>
