@@ -1,5 +1,7 @@
 package com.taskflow.executor;
 
+import org.springframework.stereotype.Service;
+
 import com.taskflow.model.NodeType;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +14,7 @@ import java.util.Map;
  * They simply pass through the input data as output.
  */
 @Component
+@Service
 public class EndNodeExecutor implements NodeExecutor {
 
     @Override

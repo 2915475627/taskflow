@@ -15,6 +15,7 @@ import com.taskflow.repository.WorkflowRunRepository;
 import com.taskflow.repository.WorkflowVersionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,20 @@ public class ExecutionEngineService {
     private final WorkflowExecutor workflowExecutor;
     private final ObjectMapper objectMapper;
 
+    /**
+     * Default constructor for Spring Boot.
+     * Requires @Autowired on individual setters or use @PostConstruct for initialization.
+     */
+    public ExecutionEngineService() {
+        this.workflowRepository = null;
+        this.workflowRunRepository = null;
+        this.workflowVersionRepository = null;
+        this.webhookService = null;
+        this.workflowExecutor = null;
+        this.objectMapper = null;
+    }
+
+    @Autowired
     public ExecutionEngineService(
             WorkflowRepository workflowRepository,
             WorkflowRunRepository workflowRunRepository,

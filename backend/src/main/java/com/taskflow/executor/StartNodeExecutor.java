@@ -1,5 +1,7 @@
 package com.taskflow.executor;
 
+import org.springframework.stereotype.Service;
+
 import com.taskflow.model.NodeType;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +14,7 @@ import java.util.Map;
  * They store workflow input data to a variable for use by subsequent nodes.
  */
 @Component
+@Service
 public class StartNodeExecutor implements NodeExecutor {
 
     @Override

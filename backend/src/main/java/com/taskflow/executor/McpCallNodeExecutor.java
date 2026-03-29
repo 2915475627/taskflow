@@ -1,5 +1,7 @@
 package com.taskflow.executor;
 
+import org.springframework.stereotype.Service;
+
 import com.taskflow.model.NodeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,7 @@ import java.util.Map;
  * }
  */
 @Component
+@Service
 public class McpCallNodeExecutor implements NodeExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(McpCallNodeExecutor.class);

@@ -1,6 +1,8 @@
 package com.taskflow.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 
 @Entity
@@ -29,9 +31,11 @@ public class WorkflowRun {
     @Enumerated(EnumType.STRING)
     private RunStatus status = RunStatus.PENDING;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "input_data", columnDefinition = "jsonb")
     private String inputData;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "output_data", columnDefinition = "jsonb")
     private String outputData;
 

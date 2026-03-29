@@ -1,6 +1,8 @@
 package com.taskflow.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 
 @Entity
@@ -18,6 +20,7 @@ public class WorkflowVersion {
     @Column(nullable = false)
     private Integer version;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false)
     private String definition;
 
