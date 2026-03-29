@@ -6,6 +6,7 @@ import type { WorkflowNodeData, NodeExecutionStatus } from '@/types';
 type CustomNodeData = WorkflowNodeData & {
   selected?: boolean;
   executionStatus?: NodeExecutionStatus;
+  errorMessage?: string;
 };
 
 const statusColors: Record<NodeExecutionStatus, string> = {
@@ -59,6 +60,11 @@ function CustomNode({ data }: NodeProps<CustomNodeData>) {
         )}
         {executionStatus === 'failed' && (
           <span className="ml-auto text-xs text-red-600 font-medium">✗</span>
+        )}
+        {data.errorMessage && executionStatus === 'failed' && (
+          <div className="text-xs text-red-500 mt-1 truncate max-w-[200px]">
+            {data.errorMessage}
+          </div>
         )}
       </div>
       <div className="font-medium text-sm">{data.name || 'Unnamed'}</div>

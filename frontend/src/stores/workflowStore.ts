@@ -11,11 +11,14 @@ interface WorkflowState {
   // Execution preview state
   isExecuting: boolean;
   currentExecutingNodeId: string | null;
+  nodeStatuses: Record<string, NodeExecutionStatus>;
+  nodeOutputs: Record<string, unknown>;
   // Actions
   addNode: (node: WorkflowNode) => void;
   updateNode: (id: string, data: Partial<WorkflowNodeData>) => void;
   updateNodePosition: (id: string, position: { x: number; y: number }) => void;
   updateNodeExecutionStatus: (id: string, status: NodeExecutionStatus) => void;
+  updateNodeOutput: (id: string, output: unknown) => void;
   removeNode: (id: string) => void;
   setNodes: (nodes: WorkflowNode[]) => void;
   setEdges: (edges: WorkflowEdge[]) => void;
@@ -28,6 +31,7 @@ interface WorkflowState {
   // Execution preview actions
   startExecution: () => void;
   stopExecution: () => void;
+  setCurrentExecutingNode: (nodeId: string | null) => void;
   reset: () => void;
 }
 
@@ -42,6 +46,8 @@ export const useWorkflowStore = create<WorkflowState>()(
         isDirty: false,
         isExecuting: false,
         currentExecutingNodeId: null,
+        nodeStatuses: {},
+        nodeOutputs: {},
 
         addNode: (node: WorkflowNode) => {
           set(
@@ -85,12 +91,36 @@ export const useWorkflowStore = create<WorkflowState>()(
         updateNodeExecutionStatus: (id: string, status: NodeExecutionStatus) => {
           set(
             (state) => ({
+              nodeStatuses: { ...state.nodeStatuses, [id]: status },
               nodes: state.nodes.map((n) =>
-                n.id === id ? { ...n, executionStatus: status } : n
+                n.id === id
+                  ? { ...n, data: { ...n.data, executionStatus: status } as unknown as WorkflowNodeData }
+                  : n
               ),
             }),
             false,
             'updateNodeExecutionStatus'
+          );
+        },
+
+        updateNodeOutput: (id: string, output: unknown) => {
+          set(
+            (state) => ({
+              nodeOutputs: { ...state.nodeOutputs, [id]: output },
+              nodes: state.nodes.map((n) =>
+                n.id === id
+                  ? {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        errorMessage: typeof output === 'string' ? output : undefined,
+                      } as unknown as WorkflowNodeData,
+                    }
+                  : n
+              ),
+            }),
+            false,
+            'updateNodeOutput'
           );
         },
 
@@ -164,11 +194,23 @@ export const useWorkflowStore = create<WorkflowState>()(
         },
 
         startExecution: () => {
-          set({ isExecuting: true, currentExecutingNodeId: null }, false, 'startExecution');
+          set(
+            {
+              isExecuting: true,
+              currentExecutingNodeId: null,
+              nodeStatuses: {},
+              nodeOutputs: {},
+            },
+            false,
+            'startExecution'
+          );
           // Reset all node execution statuses
           set(
             (state) => ({
-              nodes: state.nodes.map((n) => ({ ...n, executionStatus: 'pending' as const })),
+              nodes: state.nodes.map((n) => ({
+                ...n,
+                data: { ...n.data, executionStatus: 'pending' as const } as unknown as WorkflowNodeData,
+              })),
             }),
             false,
             'resetExecutionStatuses'
@@ -177,6 +219,10 @@ export const useWorkflowStore = create<WorkflowState>()(
 
         stopExecution: () => {
           set({ isExecuting: false, currentExecutingNodeId: null }, false, 'stopExecution');
+        },
+
+        setCurrentExecutingNode: (nodeId: string | null) => {
+          set({ currentExecutingNodeId: nodeId }, false, 'setCurrentExecutingNode');
         },
 
         reset: () => {
@@ -189,6 +235,8 @@ export const useWorkflowStore = create<WorkflowState>()(
               isDirty: false,
               isExecuting: false,
               currentExecutingNodeId: null,
+              nodeStatuses: {},
+              nodeOutputs: {},
             },
             false,
             'reset'

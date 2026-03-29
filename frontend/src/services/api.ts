@@ -57,4 +57,35 @@ export const triggerApi = {
   },
 };
 
+export interface WorkflowExecuteResponse {
+  runId: number;
+  executionId: string;
+  status: string;
+  message?: string;
+}
+
+export interface WorkflowRunStatus {
+  runId: number;
+  executionId: string;
+  status: string;
+  outputData?: Record<string, unknown>;
+  nodeOutputs?: Record<string, unknown>;
+}
+
+export const executionApi = {
+  async execute(workflowId: string): Promise<WorkflowExecuteResponse> {
+    const response = await api.post<{ success: boolean; data: WorkflowExecuteResponse }>(
+      `/workflows/${workflowId}/execute`
+    );
+    return response.data.data;
+  },
+
+  async getRunStatus(executionId: string): Promise<WorkflowRunStatus> {
+    const response = await api.get<{ success: boolean; data: WorkflowRunStatus }>(
+      `/workflows/runs/${executionId}`
+    );
+    return response.data.data;
+  },
+};
+
 export { api };

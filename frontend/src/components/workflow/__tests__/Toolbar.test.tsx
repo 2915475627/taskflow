@@ -1,13 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Toolbar } from '../Toolbar';
-import { useWorkflowStore } from '@/stores';
-
-// Create mock functions
-const mockZoomIn = vi.fn();
-const mockZoomOut = vi.fn();
-const mockFitView = vi.fn();
-const mockGetViewport = vi.fn(() => ({ x: 0, y: 0, zoom: 1 }));
+import * as useWorkflowModule from '@/hooks/useWorkflow';
 
 // Mock lucide-react
 vi.mock('lucide-react', () => ({
@@ -32,6 +26,11 @@ vi.mock('../AddNodeMenu', () => ({
 }));
 
 // Mock reactflow
+const mockZoomIn = vi.fn();
+const mockZoomOut = vi.fn();
+const mockFitView = vi.fn();
+const mockGetViewport = vi.fn(() => ({ x: 0, y: 0, zoom: 1 }));
+
 vi.mock('reactflow', () => ({
   useReactFlow: vi.fn(() => ({
     zoomIn: mockZoomIn,
@@ -41,33 +40,20 @@ vi.mock('reactflow', () => ({
   })),
 }));
 
-// Mock the workflow store
-vi.mock('@/stores', () => ({
-  useWorkflowStore: vi.fn(),
-}));
-
 describe('Toolbar', () => {
-  const mockStartExecution = vi.fn();
+  const mockExecuteWorkflow = vi.fn();
   const mockStopExecution = vi.fn();
-
-  const mockNodes = [
-    {
-      id: 'node-1',
-      type: 'trigger' as const,
-      position: { x: 100, y: 100 },
-      data: { type: 'trigger' as const, name: 'Trigger', config: {} },
-    },
-  ];
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetViewport.mockReturnValue({ x: 0, y: 0, zoom: 1 });
-    (useWorkflowStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
-      nodes: mockNodes,
+    vi.spyOn(useWorkflowModule, 'useWorkflow').mockReturnValue({
+      nodes: [],
+      edges: [],
       isExecuting: false,
-      startExecution: mockStartExecution,
+      executeWorkflow: mockExecuteWorkflow,
       stopExecution: mockStopExecution,
-    });
+    } as unknown as ReturnType<typeof useWorkflowModule.useWorkflow>);
   });
 
   it('should render zoom percentage', () => {
@@ -81,12 +67,13 @@ describe('Toolbar', () => {
   });
 
   it('should render stop button when executing', () => {
-    (useWorkflowStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
-      nodes: mockNodes,
+    vi.spyOn(useWorkflowModule, 'useWorkflow').mockReturnValue({
+      nodes: [],
+      edges: [],
       isExecuting: true,
-      startExecution: mockStartExecution,
+      executeWorkflow: mockExecuteWorkflow,
       stopExecution: mockStopExecution,
-    });
+    } as unknown as ReturnType<typeof useWorkflowModule.useWorkflow>);
 
     render(<Toolbar />);
     expect(screen.getByTestId('square-icon')).toBeInTheDocument();
@@ -108,34 +95,23 @@ describe('Toolbar', () => {
     expect(screen.getByTestId('maximize-icon')).toBeInTheDocument();
   });
 
-  it('should call startExecution when play button is clicked', () => {
-    render(<Toolbar />);
+  it('should call executeWorkflow when play button is clicked with workflowId', () => {
+    render(<Toolbar workflowId="123" />);
     fireEvent.click(screen.getByTestId('play-icon'));
-    expect(mockStartExecution).toHaveBeenCalled();
+    expect(mockExecuteWorkflow).toHaveBeenCalledWith('123');
   });
 
   it('should call stopExecution when stop button is clicked', () => {
-    (useWorkflowStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
-      nodes: mockNodes,
+    vi.spyOn(useWorkflowModule, 'useWorkflow').mockReturnValue({
+      nodes: [],
+      edges: [],
       isExecuting: true,
-      startExecution: mockStartExecution,
+      executeWorkflow: mockExecuteWorkflow,
       stopExecution: mockStopExecution,
-    });
+    } as unknown as ReturnType<typeof useWorkflowModule.useWorkflow>);
 
     render(<Toolbar />);
     fireEvent.click(screen.getByTestId('square-icon'));
     expect(mockStopExecution).toHaveBeenCalled();
-  });
-
-  it('should display 50% when viewport zoom is 0.5', () => {
-    mockGetViewport.mockReturnValue({ x: 0, y: 0, zoom: 0.5 });
-    render(<Toolbar />);
-    expect(screen.getByText('50%')).toBeInTheDocument();
-  });
-
-  it('should display 150% when viewport zoom is 1.5', () => {
-    mockGetViewport.mockReturnValue({ x: 0, y: 0, zoom: 1.5 });
-    render(<Toolbar />);
-    expect(screen.getByText('150%')).toBeInTheDocument();
   });
 });

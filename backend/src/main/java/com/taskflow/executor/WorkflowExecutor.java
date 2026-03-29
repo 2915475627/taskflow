@@ -28,10 +28,30 @@ public class WorkflowExecutor {
 
     private final Map<NodeType, NodeExecutor> executors = new HashMap<>();
 
+    private final List<NodeExecutor> nodeExecutors;
+
+    /**
+     * Constructor for Spring dependency injection.
+     * Spring will inject all NodeExecutor beans.
+     */
+    public WorkflowExecutor(List<NodeExecutor> nodeExecutors) {
+        this.nodeExecutors = nodeExecutors;
+    }
+
+    /**
+     * Protected no-arg constructor for test compatibility.
+     * Tests should manually register executors via registerExecutor().
+     */
+    protected WorkflowExecutor() {
+        this.nodeExecutors = Collections.emptyList();
+    }
+
     @PostConstruct
     public void init() {
-        // Note: Spring will inject NodeExecutor beans after construction
-        // Use @Autowired or constructor injection in real implementation
+        for (NodeExecutor executor : nodeExecutors) {
+            registerExecutor(executor);
+        }
+        log.info("Registered {} node executors: {}", executors.size(), executors.keySet());
     }
 
     public void registerExecutor(NodeExecutor executor) {

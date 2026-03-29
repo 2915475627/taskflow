@@ -25,9 +25,10 @@ const edgeStyles: Record<EdgeType, { stroke: string; strokeDasharray?: string }>
 
 interface WorkflowCanvasProps {
   className?: string;
+  workflowId?: string;
 }
 
-export function WorkflowCanvas({ className }: WorkflowCanvasProps) {
+export function WorkflowCanvas({ className, workflowId }: WorkflowCanvasProps) {
   const {
     nodes: storeNodes,
     edges: storeEdges,
@@ -164,7 +165,7 @@ export function WorkflowCanvas({ className }: WorkflowCanvasProps) {
         <Background />
         <Controls />
         <MiniMap />
-        <Toolbar />
+        <Toolbar workflowId={workflowId} />
       </ReactFlow>
     </div>
   );

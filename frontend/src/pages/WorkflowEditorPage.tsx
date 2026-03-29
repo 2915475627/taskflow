@@ -52,7 +52,7 @@ export function WorkflowEditorPage() {
       {/* Canvas with NodePanel */}
       <main className="flex-1 flex">
         <div className="flex-1">
-          <WorkflowCanvas />
+          <WorkflowCanvas workflowId={workflowId} />
         </div>
         {selectedNodeId && <NodePanel />}
       </main>

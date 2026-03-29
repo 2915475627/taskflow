@@ -8,11 +8,22 @@ import { AddNodeMenu } from './AddNodeMenu';
 
 interface ToolbarProps {
   className?: string;
+  workflowId?: string;
 }
 
-export function Toolbar({ className }: ToolbarProps) {
+export function Toolbar({ className, workflowId }: ToolbarProps) {
   const { zoomIn, zoomOut, fitView, getViewport } = useReactFlow();
-  const { isExecuting, startExecution, stopExecution } = useWorkflow();
+  const { isExecuting, executeWorkflow, stopExecution } = useWorkflow();
+
+  const handleExecute = useCallback(async () => {
+    if (workflowId) {
+      try {
+        await executeWorkflow(workflowId);
+      } catch (error) {
+        console.error('Failed to execute workflow:', error);
+      }
+    }
+  }, [workflowId, executeWorkflow]);
 
   const handleZoomIn = useCallback(() => {
     zoomIn({ duration: 200 });
@@ -51,8 +62,9 @@ export function Toolbar({ className }: ToolbarProps) {
             variant="default"
             size="icon"
             className="h-8 w-8"
-            onClick={startExecution}
+            onClick={handleExecute}
             title="Start execution"
+            disabled={!workflowId}
           >
             <Play className="h-4 w-4" />
           </Button>

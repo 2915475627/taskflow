@@ -1,9 +1,13 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useWorkflowStore } from '@/stores';
+import { executionApi } from '@/services/api';
 import type { WorkflowNode, WorkflowNodeData, NodeExecutionStatus } from '@/types';
+
+const POLL_INTERVAL_MS = 1000;
 
 export function useWorkflow() {
   const store = useWorkflowStore();
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const selectedNode = useMemo(() => {
     if (!store.selectedNodeId) return null;
@@ -39,6 +43,13 @@ export function useWorkflow() {
   const updateNodeExecutionStatus = useCallback(
     (id: string, status: NodeExecutionStatus) => {
       store.updateNodeExecutionStatus(id, status);
+    },
+    [store]
+  );
+
+  const updateNodeOutput = useCallback(
+    (id: string, output: unknown) => {
+      store.updateNodeOutput(id, output);
     },
     [store]
   );
@@ -104,12 +115,83 @@ export function useWorkflow() {
   }, [store]);
 
   const stopExecution = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
     store.stopExecution();
   }, [store]);
 
+  const setCurrentExecutingNode = useCallback(
+    (nodeId: string | null) => {
+      store.setCurrentExecutingNode(nodeId);
+    },
+    [store]
+  );
+
   const reset = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
     store.reset();
   }, [store]);
+
+  const executeWorkflow = useCallback(
+    async (workflowId: string) => {
+      try {
+        startExecution();
+        const response = await executionApi.execute(workflowId);
+        if (response.executionId) {
+          pollRunStatus(response.executionId);
+        }
+        return response;
+      } catch (error) {
+        stopExecution();
+        throw error;
+      }
+    },
+    [startExecution, stopExecution]
+  );
+
+  const pollRunStatus = useCallback(
+    (executionId: string) => {
+      pollIntervalRef.current = setInterval(async () => {
+        if (!store.isExecuting) {
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
+          return;
+        }
+
+        try {
+          const status = await executionApi.getRunStatus(executionId);
+          if (status.nodeOutputs) {
+            for (const [nodeId, output] of Object.entries(status.nodeOutputs)) {
+              if (output && typeof output === 'object' && 'error' in (output as Record<string, unknown>)) {
+                updateNodeExecutionStatus(nodeId, 'failed');
+                updateNodeOutput(nodeId, (output as Record<string, unknown>).error);
+              } else if (status.status === 'completed') {
+                updateNodeExecutionStatus(nodeId, 'completed');
+                updateNodeOutput(nodeId, output);
+              }
+            }
+          }
+          if (status.status === 'failed' || status.status === 'completed') {
+            if (pollIntervalRef.current) {
+              clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+            }
+            store.stopExecution();
+          }
+        } catch (error) {
+          console.error('Error polling run status:', error);
+        }
+      }, POLL_INTERVAL_MS);
+    },
+    [store, updateNodeExecutionStatus, updateNodeOutput]
+  );
 
   return {
     nodes: store.nodes,
@@ -121,10 +203,13 @@ export function useWorkflow() {
     isDirty: store.isDirty,
     isExecuting: store.isExecuting,
     currentExecutingNodeId: store.currentExecutingNodeId,
+    nodeStatuses: store.nodeStatuses,
+    nodeOutputs: store.nodeOutputs,
     addNode,
     updateNode,
     updateNodePosition,
     updateNodeExecutionStatus,
+    updateNodeOutput,
     removeNode,
     setNodes,
     setEdges,
@@ -135,6 +220,9 @@ export function useWorkflow() {
     selectEdge,
     startExecution,
     stopExecution,
+    setCurrentExecutingNode,
+    executeWorkflow,
+    pollRunStatus,
     reset,
   };
 }
