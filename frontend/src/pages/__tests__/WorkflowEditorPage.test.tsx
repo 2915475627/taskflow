@@ -1,10 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { WorkflowEditorPage } from '../WorkflowEditorPage';
 import { useWorkflow } from '@/hooks/useWorkflow';
 import { useWorkflowStore, useUIStore } from '@/stores';
+
+// Mock fetch
+const mockFetch = vi.fn();
+globalThis.fetch = mockFetch;
 
 // Mock reactflow to avoid useReactFlow error
 vi.mock('reactflow', () => ({
@@ -68,9 +72,34 @@ const renderWithProviders = (ui: React.ReactElement) => {
   );
 };
 
+const mockVersionsResponse = {
+  success: true,
+  data: [
+    {
+      id: 1,
+      version: 1,
+      definition: JSON.stringify({
+        nodes: [
+          { id: 'start-1', type: 'START', name: 'Start', description: '', config: {}, position: { x: 0, y: 0 } },
+        ],
+        edges: [],
+      }),
+      changelog: 'Initial version',
+      createdAt: '2024-01-01T00:00:00Z',
+    },
+  ],
+};
+
 describe('WorkflowEditorPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetch.mockReset();
+
+    // Default: successful version load
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(mockVersionsResponse),
+    });
 
     // Setup default mocks
     (useWorkflowStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
@@ -81,6 +110,8 @@ describe('WorkflowEditorPage', () => {
       selectNode: mockSelectNode,
       reset: mockReset,
       updateNode: mockUpdateNode,
+      setNodes: vi.fn(),
+      setEdges: vi.fn(),
     });
 
     (useUIStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
@@ -95,51 +126,59 @@ describe('WorkflowEditorPage', () => {
     });
   });
 
-  it('should render editor page with header', () => {
+  it('should render editor page with header', async () => {
     renderWithProviders(
       <Routes>
         <Route path="/editor/:workflowId" element={<WorkflowEditorPage />} />
       </Routes>
     );
 
-    expect(screen.getByText('Edit Workflow')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Edit Workflow')).toBeInTheDocument();
+    });
   });
 
-  it('should render back button', () => {
+  it('should render back button', async () => {
     renderWithProviders(
       <Routes>
         <Route path="/editor/:workflowId" element={<WorkflowEditorPage />} />
       </Routes>
     );
 
-    // There are multiple buttons, check for the one with ArrowLeft icon
-    const buttons = screen.getAllByRole('button');
-    expect(buttons.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      // There are multiple buttons, check for the one with ArrowLeft icon
+      const buttons = screen.getAllByRole('button');
+      expect(buttons.length).toBeGreaterThan(0);
+    });
   });
 
-  it('should render Save and Deploy buttons', () => {
+  it('should render Save and Deploy buttons', async () => {
     renderWithProviders(
       <Routes>
         <Route path="/editor/:workflowId" element={<WorkflowEditorPage />} />
       </Routes>
     );
 
-    expect(screen.getByText('Save')).toBeInTheDocument();
-    expect(screen.getByText('Deploy')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Save')).toBeInTheDocument();
+      expect(screen.getByText('Deploy')).toBeInTheDocument();
+    });
   });
 
-  it('should disable Save button when not dirty', () => {
+  it('should disable Save button when not dirty', async () => {
     renderWithProviders(
       <Routes>
         <Route path="/editor/:workflowId" element={<WorkflowEditorPage />} />
       </Routes>
     );
 
-    const saveButton = screen.getByText('Save') as HTMLButtonElement;
-    expect(saveButton.closest('button')).toBeDisabled();
+    await waitFor(() => {
+      const saveButton = screen.getByText('Save') as HTMLButtonElement;
+      expect(saveButton.closest('button')).toBeDisabled();
+    });
   });
 
-  it('should show unsaved changes indicator when dirty', () => {
+  it('should show unsaved changes indicator when dirty', async () => {
     (useWorkflow as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
       nodes: [],
       edges: [],
@@ -152,6 +191,8 @@ describe('WorkflowEditorPage', () => {
       </Routes>
     );
 
-    expect(screen.getByText('(unsaved changes)')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('(unsaved changes)')).toBeInTheDocument();
+    });
   });
 });

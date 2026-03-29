@@ -146,7 +146,28 @@ export const handlers = [
     });
   }),
 
-  // Get version history
+  // Get workflow versions
+  http.get('/api/workflows/:workflowId/versions', async ({ params }) => {
+    await delay(200);
+    const workflow = mockWorkflows.find((w) => w.id === params.workflowId);
+    if (!workflow) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return HttpResponse.json({
+      success: true,
+      data: [
+        {
+          id: 1,
+          version: workflow.version,
+          definition: JSON.stringify({ nodes: workflow.nodes, edges: workflow.edges }),
+          changelog: 'Initial version',
+          createdAt: workflow.createdAt,
+        },
+      ],
+    });
+  }),
+
+  // Get version history (triggers endpoint)
   http.get('/api/triggers/:workflowId/versions', async ({ params }) => {
     await delay(200);
     const workflow = mockWorkflows.find((w) => w.id === params.workflowId);
