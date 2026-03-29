@@ -18,7 +18,7 @@ public record WorkflowResponse(
     public static WorkflowResponse from(Workflow workflow) {
         return new WorkflowResponse(
                 workflow.getId(),
-                workflow.getTenant().getId(),
+                workflow.getTenant() != null ? workflow.getTenant().getId() : null,
                 workflow.getName(),
                 workflow.getDescription(),
                 workflow.getStatus(),

@@ -25,7 +25,7 @@ public class WorkflowController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<WorkflowResponse>> list(
+    public ResponseEntity<ApiResponse<java.util.List<WorkflowResponse>>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(required = false) WorkflowStatus status,
