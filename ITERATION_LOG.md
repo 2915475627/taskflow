@@ -1,5 +1,30 @@
 # 迭代记录
 
+## Iteration-007 (2026-03-30)
+
+**状态**: ✅ 完成
+
+### 目标
+实现表达式引擎独立服务
+
+### 步骤
+1. 创建ExpressionResult DTO
+2. 创建ExpressionEngine服务
+3. 实现变量替换 ${variable.path}
+4. 实现字符串模板 "Hello ${name}"
+5. 实现数学表达式 ${a + b}
+6. 实现条件表达式 ${status} eq 'active'
+7. 实现函数: contains, startsWith, endsWith, length, now
+8. 创建28个ExpressionEngine测试
+
+### 产出
+- ExpressionResult: 表达式结果DTO
+- ExpressionEngine: 表达式引擎服务
+- ExpressionEngineTest: 28 tests
+- 后端测试: 123 -> 151
+
+---
+
 ## Iteration-006 (2026-03-30)
 
 **状态**: ✅ 完成
@@ -75,18 +100,18 @@
 ### 测试结果
 | 类型 | 通过 | 总计 |
 |------|------|------|
-| 后端 | 123  | 123  |
+| 后端 | 151  | 151  |
 | 前端 | 183  | 183  |
 | E2E  | 35   | 35   |
-| **合计** | **341** | **341** |
+| **合计** | **369** | **369** |
 
 ### Push记录
+- Iteration-007: 表达式引擎独立服务 (16:35)
 - Iteration-006: 定时任务调度后端支持 (16:30)
 - Iteration-005: Webhook触发器后端支持 (16:15)
 - Iteration-004: HTTP安全验证 (15:34)
 
 ### 下一步
-- [ ] 实现表达式引擎独立服务
 - [ ] 前端Webhook触发器UI
 - [ ] 前端定时任务调度UI
 - [ ] E2E测试: Webhook触发和定时调度
