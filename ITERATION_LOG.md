@@ -1,5 +1,32 @@
 # 迭代记录
 
+## Iteration-006 (2026-03-30)
+
+**状态**: ✅ 完成
+
+### 目标
+实现定时任务调度后端支持
+
+### 步骤
+1. 创建WorkflowSchedule实体
+2. 创建WorkflowScheduleRepository
+3. 创建ScheduleService管理CRUD和触发
+4. 创建WorkflowScheduler定时检查
+5. 创建ScheduleController REST API
+6. 创建8个ScheduleController测试
+
+### 产出
+- WorkflowSchedule: 定时任务实体
+- WorkflowScheduleRepository: 数据访问层
+- ScheduleService: 调度服务
+- WorkflowScheduler: 定时检查组件
+- ScheduleController: REST API端点
+- ScheduleControllerTest: 8 tests
+- TaskFlowApplication: 添加@EnableScheduling
+- 后端测试: 115 -> 123
+
+---
+
 ## Iteration-005 (2026-03-30)
 
 **状态**: ✅ 完成
@@ -48,16 +75,18 @@
 ### 测试结果
 | 类型 | 通过 | 总计 |
 |------|------|------|
-| 后端 | 115  | 115  |
+| 后端 | 123  | 123  |
 | 前端 | 183  | 183  |
 | E2E  | 35   | 35   |
-| **合计** | **333** | **333** |
+| **合计** | **341** | **341** |
 
 ### Push记录
+- Iteration-006: 定时任务调度后端支持 (16:30)
 - Iteration-005: Webhook触发器后端支持 (16:15)
 - Iteration-004: HTTP安全验证 (15:34)
 
 ### 下一步
-- [ ] 实现定时任务调度
 - [ ] 实现表达式引擎独立服务
 - [ ] 前端Webhook触发器UI
+- [ ] 前端定时任务调度UI
+- [ ] E2E测试: Webhook触发和定时调度
