@@ -68,6 +68,15 @@ public class ExpressionEngine {
     public ExpressionResult evaluateTemplate(String template, Map<String, Object> context) {
         try {
             String result = substituteVariables(template, context);
+            // If it's a single variable reference that resolved to empty, return null
+            if (template.matches("\\$\\{[^}]+}$") && result.isEmpty()) {
+                return ExpressionResult.success(null);
+            }
+            // If the result is a quoted string, strip the quotes
+            if ((result.startsWith("\"") && result.endsWith("\"")) ||
+                (result.startsWith("'") && result.endsWith("'"))) {
+                result = result.substring(1, result.length() - 1);
+            }
             return ExpressionResult.success(result);
         } catch (Exception e) {
             log.error("Template evaluation failed for '{}': {}", template, e.getMessage());
@@ -144,8 +153,23 @@ public class ExpressionEngine {
                 return evaluateCondition(expression, context);
             }
 
-            // Check if it's a template with variables
+            // Check for string concatenation with + operator before template check
+            if (expression.contains("${") && expression.contains("+")) {
+                return evaluateStringConcat(expression, context);
+            }
+
+            // Check for math expressions with variables (contains ${ and *, /, or standalone +)
             if (expression.contains("${")) {
+                String afterSubstitution = substituteVariables(expression, context);
+                // If substituted result looks like math, evaluate as math
+                if (MATH_PATTERN.matcher(afterSubstitution.trim()).matches()) {
+                    return evaluateMath(expression, context);
+                }
+                // If it's a single variable reference that resolved to empty, return null
+                if (expression.matches("\\$\\{[^}]+}$") && afterSubstitution.isEmpty()) {
+                    return ExpressionResult.success(null);
+                }
+                // Otherwise treat as template
                 return evaluateTemplate(expression, context);
             }
 
@@ -170,6 +194,108 @@ public class ExpressionEngine {
                 expression.contains("endsWith") ||
                 expression.contains("length") ||
                 expression.contains("now"));
+    }
+
+    /**
+     * Evaluate string concatenation expression like "${a} + ' ' + ${b}".
+     * If all operands are numbers, performs addition instead of concatenation.
+     */
+    private ExpressionResult evaluateStringConcat(String expression, Map<String, Object> context) {
+        try {
+            String[] parts = splitByPlusRespectingQuotes(expression);
+            java.util.List<Object> values = new java.util.ArrayList<>();
+            boolean hasNonNumeric = false;
+
+            for (String part : parts) {
+                String trimmed = part.trim();
+                // Skip empty parts
+                if (trimmed.isEmpty()) {
+                    continue;
+                }
+                // Handle quoted strings - strip quotes and mark as non-numeric
+                if ((trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
+                    (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+                    values.add(trimmed.substring(1, trimmed.length() - 1));
+                    hasNonNumeric = true;
+                } else if (trimmed.startsWith("${") && trimmed.endsWith("}")) {
+                    // Handle variable references - strip ${} and resolve
+                    Object resolved = resolveVariable(trimmed.substring(2, trimmed.length() - 1), context);
+                    if (resolved != null) {
+                        values.add(resolved);
+                        if (!(resolved instanceof Number)) {
+                            hasNonNumeric = true;
+                        }
+                    }
+                } else {
+                    // Otherwise try to evaluate as expression
+                    Object resolved = resolveValue(trimmed, context);
+                    if (resolved != null) {
+                        values.add(resolved);
+                        if (!(resolved instanceof Number)) {
+                            hasNonNumeric = true;
+                        }
+                    }
+                }
+            }
+
+            // If all values are numbers, perform addition
+            if (!values.isEmpty() && !hasNonNumeric) {
+                double sum = 0;
+                for (Object val : values) {
+                    sum += ((Number) val).doubleValue();
+                }
+                if (sum == Math.floor(sum) && !Double.isInfinite(sum)) {
+                    return ExpressionResult.success((long) sum);
+                }
+                return ExpressionResult.success(sum);
+            }
+
+            // Otherwise, concatenate as strings
+            StringBuilder result = new StringBuilder();
+            for (Object val : values) {
+                result.append(val.toString());
+            }
+            return ExpressionResult.success(result.toString());
+        } catch (Exception e) {
+            log.error("String concatenation evaluation failed for '{}': {}", expression, e.getMessage());
+            return ExpressionResult.failure("Failed to evaluate string concatenation: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Split by + operator while respecting quoted strings.
+     */
+    private String[] splitByPlusRespectingQuotes(String expression) {
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuote = false;
+        char quoteChar = 0;
+
+        for (int i = 0; i < expression.length(); i++) {
+            char c = expression.charAt(i);
+
+            if ((c == '"' || c == '\'') && !inQuote) {
+                inQuote = true;
+                quoteChar = c;
+                current.append(c);
+            } else if (c == quoteChar && inQuote) {
+                inQuote = false;
+                quoteChar = 0;
+                current.append(c);
+            } else if (c == '+' && !inQuote) {
+                parts.add(current.toString());
+                current = new StringBuilder();
+            } else {
+                current.append(c);
+            }
+        }
+
+        String last = current.toString().trim();
+        if (!last.isEmpty()) {
+            parts.add(last);
+        }
+
+        return parts.toArray(new String[0]);
     }
 
     /**

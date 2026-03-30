@@ -1,5 +1,34 @@
 # 迭代记录
 
+## Iteration-009 (2026-03-30)
+
+**状态**: ✅ 完成
+
+### 目标
+实现前端Webhook触发器UI
+
+### 步骤
+1. 添加webhookApi到services/api.ts
+2. 创建WebhookTriggerDialog组件
+3. 集成到WorkflowEditorPage
+4. 编写6个WebhookTriggerDialog测试
+
+### 产出
+- webhookApi: trigger方法用于触发webhook
+- WebhookTriggerDialog: Webhook触发器对话框组件
+- WorkflowEditorPage: 添加Webhook按钮和对话框集成
+- WebhookTriggerDialogTest: 6 tests
+- 前端测试: 185 -> 191
+
+### 额外修复
+ExpressionEngine.java修复（从Iteration-008恢复并增强）:
+- 字符串连接: `${a} + ' ' + ${b}` 正确解析
+- 数学表达式: `${a} + ${b}` 当操作数为数字时执行加法
+- 模板求值: 正确去除字符串字面量的引号
+- 后端测试: 160 (无变化)
+
+---
+
 ## Iteration-008 (2026-03-30)
 
 **状态**: ✅ 完成

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
-import { workflowApi, triggerApi } from '../api';
+import { workflowApi, triggerApi, webhookApi } from '../api';
 
 const server = setupServer(
   http.get('/api/workflows', () =>
@@ -53,7 +53,18 @@ const server = setupServer(
     HttpResponse.json({
       data: [{ version: 1, status: 'published', createdAt: '2024-01-01' }],
     })
-  )
+  ),
+  http.post('/api/webhooks/trigger/:workflowId', async ({ params, request }) => {
+    const body = await request.json() as { payload?: Record<string, unknown> };
+    return HttpResponse.json({
+      data: {
+        runId: 1,
+        executionId: `exec-${params.workflowId}`,
+        status: 'success',
+        message: 'Workflow triggered successfully',
+      },
+    });
+  })
 );
 
 beforeAll(() => server.listen());
@@ -120,6 +131,23 @@ describe('triggerApi', () => {
       const versions = await triggerApi.getVersions('1');
       expect(versions).toHaveLength(1);
       expect(versions[0].version).toBe(1);
+    });
+  });
+});
+
+describe('webhookApi', () => {
+  describe('trigger', () => {
+    it('should trigger workflow via webhook', async () => {
+      const result = await webhookApi.trigger('1');
+      expect(result.status).toBe('success');
+      expect(result.runId).toBe(1);
+      expect(result.executionId).toBe('exec-1');
+    });
+
+    it('should trigger workflow with payload', async () => {
+      const result = await webhookApi.trigger('1', { payload: { key: 'value' } });
+      expect(result.status).toBe('success');
+      expect(result.message).toBe('Workflow triggered successfully');
     });
   });
 });

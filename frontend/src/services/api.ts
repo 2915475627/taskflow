@@ -117,4 +117,25 @@ export const executionApi = {
   },
 };
 
+export interface WebhookTriggerRequest {
+  payload?: Record<string, unknown>;
+}
+
+export interface WebhookTriggerResponse {
+  runId: number;
+  executionId: string;
+  status: string;
+  message?: string;
+}
+
+export const webhookApi = {
+  async trigger(workflowId: string, request?: WebhookTriggerRequest): Promise<WebhookTriggerResponse> {
+    const response = await api.post<{ success: boolean; data: WebhookTriggerResponse }>(
+      `/webhooks/trigger/${workflowId}`,
+      request || {}
+    );
+    return response.data.data;
+  },
+};
+
 export { api };

@@ -4,8 +4,9 @@ import { WorkflowCanvas, NodePanel } from '@/components/workflow';
 import { Button } from '@/components/ui';
 import { useWorkflowStore, useUIStore } from '@/stores';
 import { useWorkflow } from '@/hooks/useWorkflow';
-import { ArrowLeft, Save, Play } from 'lucide-react';
+import { ArrowLeft, Save, Play, Webhook as WebhookIcon } from 'lucide-react';
 import { workflowApi, versionApi } from '@/services/api';
+import { WebhookTriggerDialog } from '@/features/editor';
 import type { WorkflowNode, WorkflowEdge } from '@/types';
 import { BuiltInNodeType } from '@/types';
 
@@ -17,6 +18,8 @@ export function WorkflowEditorPage() {
   const { selectedNodeId, setNodes, setEdges } = useWorkflowStore();
   const { openDeployDialog } = useUIStore();
   const { reset } = useWorkflowStore();
+  const [workflowName, setWorkflowName] = useState('New Workflow');
+  const [isWebhookDialogOpen, setIsWebhookDialogOpen] = useState(false);
 
   // Load workflow version when workflowId changes
   useEffect(() => {
@@ -25,6 +28,10 @@ export function WorkflowEditorPage() {
     const loadWorkflow = async () => {
       setIsLoading(true);
       try {
+        // Fetch workflow details for name
+        const workflow = await workflowApi.getById(workflowId);
+        setWorkflowName(workflow.name);
+
         const versions = await versionApi.list(workflowId);
         if (versions.length > 0) {
           // Sort by version descending to get latest
@@ -152,6 +159,12 @@ export function WorkflowEditorPage() {
             <Play className="h-4 w-4 mr-2" />
             Deploy
           </Button>
+          {workflowId && (
+            <Button variant="outline" onClick={() => setIsWebhookDialogOpen(true)}>
+              <WebhookIcon className="h-4 w-4 mr-2" />
+              Webhook
+            </Button>
+          )}
         </div>
       </header>
 
@@ -162,6 +175,16 @@ export function WorkflowEditorPage() {
         </div>
         {selectedNodeId && <NodePanel />}
       </main>
+
+      {/* Webhook Trigger Dialog */}
+      {workflowId && (
+        <WebhookTriggerDialog
+          open={isWebhookDialogOpen}
+          onOpenChange={setIsWebhookDialogOpen}
+          workflowId={workflowId}
+          workflowName={workflowName}
+        />
+      )}
     </div>
   );
 }
