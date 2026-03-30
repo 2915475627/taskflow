@@ -1,5 +1,32 @@
 # 迭代记录
 
+## Iteration-014 (2026-03-30)
+
+**状态**: ✅ 完成
+
+### 目标
+实现断点调试功能用于工作流节点
+
+### 步骤
+1. 添加breakpoints状态和isPaused状态到workflowStore
+2. 添加pauseExecution、resumeExecution、toggleBreakpoint动作
+3. 更新CustomNode显示断点指示器按钮
+4. 更新WorkflowCanvas传递断点状态到节点
+5. 更新Toolbar添加暂停/恢复执行按钮
+6. 更新useWorkflow hook导出新功能
+7. 更新Toolbar测试添加Pause图标mock
+
+### 产出
+- workflowStore: 添加breakpoints和isPaused状态
+- CustomNode: 断点指示器按钮（左上角红点）
+- Toolbar: 暂停/恢复执行按钮
+- useWorkflow: 新增pauseExecution、resumeExecution、toggleBreakpoint
+- Toolbar.test.tsx: 添加Pause图标和hook返回
+- 前端测试: 210 (无变化)
+- E2E测试: 45 (无变化)
+
+---
+
 ## Iteration-013 (2026-03-30)
 
 **状态**: ✅ 完成
@@ -243,12 +270,13 @@ ExpressionEngine.java修复（从Iteration-008恢复并增强）:
 ### 测试结果
 | 类型 | 通过 | 总计 |
 |------|------|------|
-| 后端 | 160  | 160  |
+| 后端 | 169  | 169  |
 | 前端 | 210  | 210  |
 | E2E  | 45   | 45   |
-| **合计** | **415** | **415** |
+| **合计** | **424** | **424** |
 
 ### Push记录
+- Iteration-014: 断点调试功能 (22:01)
 - Iteration-013: 执行日志面板 (21:42)
 - Iteration-012: Log节点实现 (17:58)
 - Iteration-011: E2E测试Webhook触发和定时调度 (17:55)
@@ -261,6 +289,8 @@ ExpressionEngine.java修复（从Iteration-008恢复并增强）:
 - Iteration-004: HTTP安全验证 (15:34)
 
 ### 下一步
+- [ ] 实现断点调试的后端支持（后端ExecutionEngine暂停/恢复）
+- [x] 前端断点调试UI
 - [x] 前端Webhook触发器UI
 - [x] 前端定时任务调度UI
 - [x] E2E测试: Webhook触发和定时调度
