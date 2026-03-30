@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskflow.dto.WebhookCallbackRequest;
 import com.taskflow.dto.WebhookConfigRequest;
 import com.taskflow.dto.WebhookConfigResponse;
+import com.taskflow.dto.WebhookTriggerRequest;
+import com.taskflow.dto.ExecutionResponse;
 import com.taskflow.entity.WorkflowRun.RunStatus;
 import com.taskflow.exception.ResourceNotFoundException;
+import com.taskflow.exception.ValidationException;
 import com.taskflow.security.TenantContext;
 import com.taskflow.service.WebhookService;
 import com.taskflow.service.WorkflowService;
@@ -131,6 +134,72 @@ class WebhookControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void triggerWorkflow_shouldStartExecution() throws Exception {
+        WebhookTriggerRequest request = new WebhookTriggerRequest("{\"key\": \"value\"}");
+        ExecutionResponse response = new ExecutionResponse(1L, "exec-123", RunStatus.PENDING, "Execution started");
+
+        when(workflowService.triggerWorkflowViaWebhook(eq(WORKFLOW_ID), eq("secret123"), any()))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/webhooks/trigger/{workflowId}", WORKFLOW_ID)
+                        .header("X-Webhook-Secret", "secret123")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.runId").value(1))
+                .andExpect(jsonPath("$.data.executionId").value("exec-123"))
+                .andExpect(jsonPath("$.data.status").value("PENDING"));
+    }
+
+    @Test
+    void triggerWorkflow_shouldReturn404_whenWorkflowNotFound() throws Exception {
+        WebhookTriggerRequest request = new WebhookTriggerRequest("{\"key\": \"value\"}");
+
+        when(workflowService.triggerWorkflowViaWebhook(eq(WORKFLOW_ID), eq("secret123"), any()))
+                .thenThrow(new ResourceNotFoundException("Webhook not configured for workflow: " + WORKFLOW_ID));
+
+        mockMvc.perform(post("/api/webhooks/trigger/{workflowId}", WORKFLOW_ID)
+                        .header("X-Webhook-Secret", "secret123")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void triggerWorkflow_shouldReturn400_whenInvalidSecret() throws Exception {
+        WebhookTriggerRequest request = new WebhookTriggerRequest("{\"key\": \"value\"}");
+
+        when(workflowService.triggerWorkflowViaWebhook(eq(WORKFLOW_ID), eq("wrongsecret"), any()))
+                .thenThrow(new ValidationException("Invalid webhook secret"));
+
+        mockMvc.perform(post("/api/webhooks/trigger/{workflowId}", WORKFLOW_ID)
+                        .header("X-Webhook-Secret", "wrongsecret")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void triggerWorkflow_shouldHandleNullInputData() throws Exception {
+        WebhookTriggerRequest request = new WebhookTriggerRequest(null);
+        ExecutionResponse response = new ExecutionResponse(2L, "exec-456", RunStatus.PENDING, "Execution started");
+
+        when(workflowService.triggerWorkflowViaWebhook(eq(WORKFLOW_ID), eq("secret123"), eq(null)))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/webhooks/trigger/{workflowId}", WORKFLOW_ID)
+                        .header("X-Webhook-Secret", "secret123")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.runId").value(2));
     }
 
     @Test

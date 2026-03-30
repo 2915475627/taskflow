@@ -14,5 +14,7 @@ public interface WebhookConfigRepository extends JpaRepository<WebhookConfig, Lo
 
     Optional<WebhookConfig> findByWorkflowIdAndTenantId(Long workflowId, Long tenantId);
 
+    Optional<WebhookConfig> findByWorkflowId(Long workflowId);
+
     List<WebhookConfig> findByTenantIdAndEnabled(Long tenantId, boolean enabled);
 }

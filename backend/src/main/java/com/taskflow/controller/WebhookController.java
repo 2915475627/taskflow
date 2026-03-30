@@ -4,6 +4,9 @@ import com.taskflow.dto.ApiResponse;
 import com.taskflow.dto.WebhookCallbackRequest;
 import com.taskflow.dto.WebhookConfigRequest;
 import com.taskflow.dto.WebhookConfigResponse;
+import com.taskflow.dto.WebhookTriggerRequest;
+import com.taskflow.dto.WebhookTriggerResponse;
+import com.taskflow.dto.ExecutionResponse;
 import com.taskflow.entity.WorkflowRun.RunStatus;
 import com.taskflow.security.TenantContext;
 import com.taskflow.service.WebhookService;
@@ -106,6 +109,28 @@ public class WebhookController {
         WebhookConfigResponse config = workflowService.getWebhookConfig(id);
 
         return ResponseEntity.ok(ApiResponse.success(config));
+    }
+
+    // Trigger workflow execution via webhook
+    @PostMapping("/webhooks/trigger/{workflowId}")
+    public ResponseEntity<ApiResponse<WebhookTriggerResponse>> triggerWorkflow(
+            @PathVariable Long workflowId,
+            @RequestHeader("X-Webhook-Secret") String secret,
+            @RequestBody WebhookTriggerRequest request) {
+
+        log.info("Received webhook trigger for workflow {}", workflowId);
+
+        ExecutionResponse response = workflowService.triggerWorkflowViaWebhook(
+                workflowId, secret, request.inputData());
+
+        WebhookTriggerResponse triggerResponse = new WebhookTriggerResponse(
+                response.runId(),
+                response.executionId(),
+                response.status().name(),
+                response.message()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(triggerResponse));
     }
 
     // Delete webhook configuration

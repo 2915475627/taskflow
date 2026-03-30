@@ -328,6 +328,62 @@ public class WorkflowService {
         log.info("webhook_config_deleted workflowId={}", workflowId);
     }
 
+    // ==================== Webhook Trigger ====================
+
+    /**
+     * Trigger workflow execution via webhook.
+     * Validates the webhook secret and creates a new workflow run.
+     *
+     * @param workflowId The workflow to trigger
+     * @param secret The webhook secret for authentication
+     * @param inputData Optional input data for the workflow
+     * @return ExecutionResponse with run details
+     * @throws ResourceNotFoundException if workflow or webhook config not found
+     * @throws ValidationException if secret is invalid or webhook disabled
+     */
+    public ExecutionResponse triggerWorkflowViaWebhook(Long workflowId, String secret, String inputData) {
+        log.info("webhook_trigger workflowId={}", workflowId);
+
+        // Find webhook config - note: webhook configs may exist without tenant context
+        WebhookConfig config = webhookConfigRepository.findByWorkflowId(workflowId)
+                .orElseThrow(() -> new ResourceNotFoundException("Webhook not configured for workflow: " + workflowId));
+
+        // Validate secret
+        if (config.getSecret() == null || !config.getSecret().equals(secret)) {
+            log.warn("webhook_trigger_invalid_secret workflowId={}", workflowId);
+            throw new ValidationException("Invalid webhook secret");
+        }
+
+        // Validate webhook is enabled
+        if (!config.isEnabled()) {
+            log.warn("webhook_trigger_disabled workflowId={}", workflowId);
+            throw new ValidationException("Webhook is disabled for workflow: " + workflowId);
+        }
+
+        Workflow workflow = config.getWorkflow();
+        Tenant tenant = config.getTenant();
+
+        String executionId = java.util.UUID.randomUUID().toString();
+
+        WorkflowRun run = new WorkflowRun(workflow, workflow.getCurrentVersion(), executionId, tenant);
+        run.setInputData(inputData);
+        run.setStatus(RunStatus.PENDING);
+        run.setCreatedAt(java.time.Instant.now());
+
+        WorkflowRun saved = workflowRunRepository.save(run);
+
+        // Trigger async execution
+        try {
+            executionEngineService.executeRun(saved.getId());
+        } catch (Exception e) {
+            log.error("Webhook execution failed for run {}: {}", saved.getId(), e.getMessage());
+        }
+
+        log.info("webhook_triggered workflowId={} executionId={}", workflowId, executionId);
+
+        return new ExecutionResponse(saved.getId(), executionId, RunStatus.PENDING, "Execution started via webhook");
+    }
+
     private Long getCurrentTenantId() {
         Long tenantId = TenantContext.getCurrentTenantId();
         if (tenantId == null) {
