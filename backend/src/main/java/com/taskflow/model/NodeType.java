@@ -16,7 +16,8 @@ public enum NodeType {
     MCP_CALL("mcpCall", "Call MCP (Model Context Protocol) tools with server name, tool name, and arguments."),
     CONDITION("condition", "Branch workflow based on conditions. Evaluates field comparisons with AND/OR logic."),
     TRANSFORM("transform", "Transform data using expressions. Maps input fields to output using expression templates."),
-    DELAY("delay", "Pause execution for a specified duration before continuing to the next node.");
+    DELAY("delay", "Pause execution for a specified duration before continuing to the next node."),
+    LOG("log", "Log messages for debugging. Evaluates expressions and outputs the logged values.");
 
     private final String value;
     private final String description;

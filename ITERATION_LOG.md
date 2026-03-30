@@ -1,5 +1,31 @@
 # 迭代记录
 
+## Iteration-012 (2026-03-30)
+
+**状态**: ✅ 完成
+
+### 目标
+实现Log节点用于调试工作流执行
+
+### 步骤
+1. 添加LOG节点类型到NodeType枚举
+2. 创建LogNodeExecutor处理日志输出
+3. 编写9个LogNodeExecutor测试
+4. 添加LogConfigForm到前端
+5. 更新types和nodeRegistry
+
+### 产出
+- NodeType.LOG: 新节点类型
+- LogNodeExecutor: 日志执行器
+- LogNodeExecutorTest: 9 tests
+- LogConfigForm: 前端配置表单
+- NodeRegistry: 添加LOG和TRANSFORM定义
+- 后端测试: 160 -> 169
+- 前端测试: 197 (无变化)
+- E2E测试: 41 (无变化)
+
+---
+
 ## Iteration-011 (2026-03-30)
 
 **状态**: ✅ 完成

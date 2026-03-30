@@ -106,6 +106,30 @@ export const NODE_REGISTRY: Record<BuiltInNodeType, NodeDefinition> = {
       outputs: [{ id: 'output', position: 'bottom' }],
     },
   },
+  [BuiltInNodeType.TRANSFORM]: {
+    type: BuiltInNodeType.TRANSFORM,
+    label: 'Transform',
+    description: 'Transform data using expressions. Maps input fields to output using expression templates.',
+    icon: '🔄',
+    category: 'logic',
+    defaultConfig: { mappings: [] },
+    handles: {
+      inputs: [{ id: 'input', position: 'top' }],
+      outputs: [{ id: 'output', position: 'bottom' }],
+    },
+  },
+  [BuiltInNodeType.LOG]: {
+    type: BuiltInNodeType.LOG,
+    label: 'Log',
+    description: 'Log messages for debugging. Evaluates expressions and outputs the logged values.',
+    icon: '📝',
+    category: 'action',
+    defaultConfig: { message: '', level: 'INFO' },
+    handles: {
+      inputs: [{ id: 'input', position: 'top' }],
+      outputs: [{ id: 'output', position: 'bottom' }],
+    },
+  },
 };
 
 /**

@@ -10,6 +10,8 @@
  * - mcpCall: Call MCP (Model Context Protocol) tools
  * - condition: Branch based on conditions
  * - delay: Pause for specified duration
+ * - transform: Transform data using expressions
+ * - log: Log messages for debugging
  */
 export enum BuiltInNodeType {
   START = 'start',
@@ -18,6 +20,8 @@ export enum BuiltInNodeType {
   MCP_CALL = 'mcpCall',
   CONDITION = 'condition',
   DELAY = 'delay',
+  TRANSFORM = 'transform',
+  LOG = 'log',
 }
 
 // Re-export for backwards compatibility
@@ -108,8 +112,19 @@ export interface DelayConfig {
   duration: number;
 }
 
+/**
+ * Configuration for Log nodes.
+ * Logs messages for debugging during workflow execution.
+ */
+export interface LogConfig {
+  /** Message to log (supports ${variable.path} expressions) */
+  message?: string;
+  /** Log level: DEBUG, INFO, WARN, ERROR */
+  level?: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
+}
+
 // Union type for all node configs
-export type NodeConfig = StartConfig | EndConfig | HttpRequestConfig | McpCallConfig | ConditionConfig | DelayConfig;
+export type NodeConfig = StartConfig | EndConfig | HttpRequestConfig | McpCallConfig | ConditionConfig | DelayConfig | LogConfig;
 
 // ==================== Node Data Types ====================
 
@@ -148,6 +163,11 @@ export interface DelayNodeData extends BaseNodeData {
   config: DelayConfig;
 }
 
+export interface LogNodeData extends BaseNodeData {
+  type: BuiltInNodeType.LOG;
+  config: LogConfig;
+}
+
 // Union of all node data types
 export type WorkflowNodeData =
   | StartNodeData
@@ -155,7 +175,8 @@ export type WorkflowNodeData =
   | HttpRequestNodeData
   | McpCallNodeData
   | ConditionNodeData
-  | DelayNodeData;
+  | DelayNodeData
+  | LogNodeData;
 
 // ==================== Workflow Graph Types ====================
 

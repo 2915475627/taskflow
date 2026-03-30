@@ -6,11 +6,13 @@ import { HttpRequestConfigForm } from './config-forms/HttpRequestConfigForm';
 import { McpCallConfigForm } from './config-forms/McpCallConfigForm';
 import { ConditionConfigForm } from './config-forms/ConditionConfigForm';
 import { DelayConfigForm } from './config-forms/DelayConfigForm';
+import { LogConfigForm } from './config-forms/LogConfigForm';
 import type {
   HttpRequestNodeData,
   McpCallNodeData,
   ConditionNodeData,
-  DelayNodeData
+  DelayNodeData,
+  LogNodeData
 } from '@/types';
 
 export function NodePanel() {
@@ -47,6 +49,8 @@ export function NodePanel() {
         return <ConditionConfigForm nodeId={node.id} data={node.data as ConditionNodeData} />;
       case BuiltInNodeType.DELAY:
         return <DelayConfigForm nodeId={node.id} data={node.data as DelayNodeData} />;
+      case BuiltInNodeType.LOG:
+        return <LogConfigForm nodeId={node.id} data={node.data as LogNodeData} />;
       case BuiltInNodeType.START:
       case BuiltInNodeType.END:
         return (
