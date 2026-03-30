@@ -1,5 +1,26 @@
 # 迭代记录
 
+## Iteration-013 (2026-03-30)
+
+**状态**: ✅ 完成
+
+### 目标
+实现执行日志面板用于查看工作流执行结果
+
+### 步骤
+1. 创建ExecutionLogPanel组件用于展示执行日志
+2. 编写13个ExecutionLogPanel测试
+3. 集成到WorkflowEditorPage
+4. 添加Logs按钮到工具栏
+
+### 产出
+- ExecutionLogPanel: 执行日志面板组件
+- ExecutionLogPanelTest: 13 tests
+- WorkflowEditorPage: 添加Logs按钮和面板集成
+- 前端测试: 197 -> 210
+
+---
+
 ## Iteration-012 (2026-03-30)
 
 **状态**: ✅ 完成
@@ -219,11 +240,13 @@ ExpressionEngine.java修复（从Iteration-008恢复并增强）:
 | 类型 | 通过 | 总计 |
 |------|------|------|
 | 后端 | 160  | 160  |
-| 前端 | 197  | 197  |
+| 前端 | 210  | 210  |
 | E2E  | 41   | 41   |
-| **合计** | **398** | **398** |
+| **合计** | **411** | **411** |
 
 ### Push记录
+- Iteration-013: 执行日志面板 (21:42)
+- Iteration-012: Log节点实现 (17:58)
 - Iteration-011: E2E测试Webhook触发和定时调度 (17:55)
 - Iteration-010: 前端定时调度配置UI (17:53)
 - Iteration-009: 前端Webhook触发器UI (17:46)
@@ -237,3 +260,4 @@ ExpressionEngine.java修复（从Iteration-008恢复并增强）:
 - [x] 前端Webhook触发器UI
 - [x] 前端定时任务调度UI
 - [x] E2E测试: Webhook触发和定时调度
+- [x] 执行日志面板
