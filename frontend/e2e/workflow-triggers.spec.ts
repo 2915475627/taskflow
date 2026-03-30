@@ -257,3 +257,67 @@ test.describe('Toolbar Buttons Visibility', () => {
     await expect(page.locator('button:has-text("Save")')).toBeVisible();
   });
 });
+
+test.describe('Execution Log Panel', () => {
+  test('should show Logs button when workflow has ID', async ({ page }) => {
+    await mockWorkflowWithId(page);
+
+    await page.goto('/editor/test-workflow-123');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for workflow to load
+    await expect(page.locator('h1')).toContainText('Edit Workflow', { timeout: 10000 });
+
+    // Logs button should be visible
+    await expect(page.locator('button:has-text("Logs")')).toBeVisible();
+  });
+
+  test('should open execution log panel when clicking Logs button', async ({ page }) => {
+    await mockWorkflowWithId(page);
+
+    await page.goto('/editor/test-workflow-123');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for workflow to load
+    await expect(page.locator('h1')).toContainText('Edit Workflow', { timeout: 10000 });
+
+    // Click Logs button
+    await page.locator('button:has-text("Logs")').click();
+
+    // Panel should appear with header - use exact match to avoid "No execution logs yet"
+    await expect(page.getByText('Execution Log', { exact: true })).toBeVisible();
+  });
+
+  test('should show empty state when no execution logs', async ({ page }) => {
+    await mockWorkflowWithId(page);
+
+    await page.goto('/editor/test-workflow-123');
+    await page.waitForLoadState('networkidle');
+
+    // Click Logs button
+    await page.locator('button:has-text("Logs")').click();
+
+    // Should show empty state message
+    await expect(page.getByText('No execution logs yet')).toBeVisible();
+  });
+
+  test('should close execution log panel when close button clicked', async ({ page }) => {
+    await mockWorkflowWithId(page);
+
+    await page.goto('/editor/test-workflow-123');
+    await page.waitForLoadState('networkidle');
+
+    // Click Logs button to open
+    await page.locator('button:has-text("Logs")').click();
+
+    // Panel should be visible
+    await expect(page.getByText('Execution Log', { exact: true })).toBeVisible();
+
+    // Find and click the close button (button with X icon)
+    const closeButton = page.locator('button').filter({ has: page.locator('svg') }).first();
+    await closeButton.click();
+
+    // Panel should be hidden - heading should not be visible
+    await expect(page.getByText('Execution Log', { exact: true })).not.toBeVisible();
+  });
+});

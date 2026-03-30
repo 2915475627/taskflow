@@ -12,12 +12,15 @@
 2. 编写13个ExecutionLogPanel测试
 3. 集成到WorkflowEditorPage
 4. 添加Logs按钮到工具栏
+5. 编写4个ExecutionLogPanel E2E测试
 
 ### 产出
 - ExecutionLogPanel: 执行日志面板组件
 - ExecutionLogPanelTest: 13 tests
 - WorkflowEditorPage: 添加Logs按钮和面板集成
+- ExecutionLogPanel E2E tests: 4 tests
 - 前端测试: 197 -> 210
+- E2E测试: 41 -> 45
 
 ---
 
@@ -241,8 +244,8 @@ ExpressionEngine.java修复（从Iteration-008恢复并增强）:
 |------|------|------|
 | 后端 | 160  | 160  |
 | 前端 | 210  | 210  |
-| E2E  | 41   | 41   |
-| **合计** | **411** | **411** |
+| E2E  | 45   | 45   |
+| **合计** | **415** | **415** |
 
 ### Push记录
 - Iteration-013: 执行日志面板 (21:42)
