@@ -138,4 +138,74 @@ export const webhookApi = {
   },
 };
 
+export interface ScheduleCreateRequest {
+  cronExpression: string;
+  timezone?: string;
+  description?: string;
+  inputData?: string;
+}
+
+export interface ScheduleResponse {
+  id: number;
+  workflowId: number;
+  workflowName: string;
+  cronExpression: string;
+  timezone: string;
+  enabled: boolean;
+  description?: string;
+  inputData?: string;
+  lastTriggeredAt?: string;
+  createdAt: string;
+}
+
+export const scheduleApi = {
+  async create(workflowId: string, request: ScheduleCreateRequest): Promise<ScheduleResponse> {
+    const response = await api.post<{ success: boolean; data: ScheduleResponse }>(
+      `/workflows/${workflowId}/schedules`,
+      request
+    );
+    return response.data.data;
+  },
+
+  async get(scheduleId: number): Promise<ScheduleResponse> {
+    const response = await api.get<{ success: boolean; data: ScheduleResponse }>(
+      `/schedules/${scheduleId}`
+    );
+    return response.data.data;
+  },
+
+  async list(): Promise<ScheduleResponse[]> {
+    const response = await api.get<{ success: boolean; data: ScheduleResponse[] }>(
+      '/schedules'
+    );
+    return response.data.data;
+  },
+
+  async listByWorkflow(workflowId: string): Promise<ScheduleResponse[]> {
+    const response = await api.get<{ success: boolean; data: ScheduleResponse[] }>(
+      `/workflows/${workflowId}/schedules`
+    );
+    return response.data.data;
+  },
+
+  async update(scheduleId: number, request: ScheduleCreateRequest): Promise<ScheduleResponse> {
+    const response = await api.put<{ success: boolean; data: ScheduleResponse }>(
+      `/schedules/${scheduleId}`,
+      request
+    );
+    return response.data.data;
+  },
+
+  async setEnabled(scheduleId: number, enabled: boolean): Promise<ScheduleResponse> {
+    const response = await api.patch<{ success: boolean; data: ScheduleResponse }>(
+      `/schedules/${scheduleId}/enabled?enabled=${enabled}`
+    );
+    return response.data.data;
+  },
+
+  async delete(scheduleId: number): Promise<void> {
+    await api.delete(`/schedules/${scheduleId}`);
+  },
+};
+
 export { api };

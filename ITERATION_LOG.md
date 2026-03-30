@@ -1,5 +1,27 @@
 # 迭代记录
 
+## Iteration-010 (2026-03-30)
+
+**状态**: ✅ 完成
+
+### 目标
+实现前端定时调度配置UI
+
+### 步骤
+1. 添加scheduleApi到services/api.ts
+2. 创建ScheduleConfigDialog组件
+3. 集成到WorkflowEditorPage
+4. 编写5个ScheduleConfigDialog测试
+
+### 产出
+- scheduleApi: CRUD方法用于管理调度
+- ScheduleConfigDialog: 定时调度配置对话框组件
+- WorkflowEditorPage: 添加Schedule按钮和对话框集成
+- ScheduleConfigDialogTest: 5 tests
+- 前端测试: 191 -> 197
+
+---
+
 ## Iteration-009 (2026-03-30)
 
 **状态**: ✅ 完成

@@ -4,9 +4,9 @@ import { WorkflowCanvas, NodePanel } from '@/components/workflow';
 import { Button } from '@/components/ui';
 import { useWorkflowStore, useUIStore } from '@/stores';
 import { useWorkflow } from '@/hooks/useWorkflow';
-import { ArrowLeft, Save, Play, Webhook as WebhookIcon } from 'lucide-react';
+import { ArrowLeft, Save, Play, Webhook as WebhookIcon, Calendar } from 'lucide-react';
 import { workflowApi, versionApi } from '@/services/api';
-import { WebhookTriggerDialog } from '@/features/editor';
+import { WebhookTriggerDialog, ScheduleConfigDialog } from '@/features/editor/components';
 import type { WorkflowNode, WorkflowEdge } from '@/types';
 import { BuiltInNodeType } from '@/types';
 
@@ -20,6 +20,7 @@ export function WorkflowEditorPage() {
   const { reset } = useWorkflowStore();
   const [workflowName, setWorkflowName] = useState('New Workflow');
   const [isWebhookDialogOpen, setIsWebhookDialogOpen] = useState(false);
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
 
   // Load workflow version when workflowId changes
   useEffect(() => {
@@ -160,10 +161,16 @@ export function WorkflowEditorPage() {
             Deploy
           </Button>
           {workflowId && (
-            <Button variant="outline" onClick={() => setIsWebhookDialogOpen(true)}>
-              <WebhookIcon className="h-4 w-4 mr-2" />
-              Webhook
-            </Button>
+            <>
+              <Button variant="outline" onClick={() => setIsWebhookDialogOpen(true)}>
+                <WebhookIcon className="h-4 w-4 mr-2" />
+                Webhook
+              </Button>
+              <Button variant="outline" onClick={() => setIsScheduleDialogOpen(true)}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Schedule
+              </Button>
+            </>
           )}
         </div>
       </header>
@@ -181,6 +188,16 @@ export function WorkflowEditorPage() {
         <WebhookTriggerDialog
           open={isWebhookDialogOpen}
           onOpenChange={setIsWebhookDialogOpen}
+          workflowId={workflowId}
+          workflowName={workflowName}
+        />
+      )}
+
+      {/* Schedule Config Dialog */}
+      {workflowId && (
+        <ScheduleConfigDialog
+          open={isScheduleDialogOpen}
+          onOpenChange={setIsScheduleDialogOpen}
           workflowId={workflowId}
           workflowName={workflowName}
         />
