@@ -13,6 +13,7 @@
 3. 集成到WorkflowEditorPage
 4. 添加Logs按钮到工具栏
 5. 编写4个ExecutionLogPanel E2E测试
+6. 连接ExecutionLogPanel到实际执行数据
 
 ### 产出
 - ExecutionLogPanel: 执行日志面板组件
