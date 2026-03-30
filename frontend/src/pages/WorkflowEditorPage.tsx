@@ -8,14 +8,14 @@ import { ArrowLeft, Save, Play, Webhook as WebhookIcon, Calendar, Terminal } fro
 import { workflowApi, versionApi } from '@/services/api';
 import { WebhookTriggerDialog, ScheduleConfigDialog, ExecutionLogPanel } from '@/features/editor/components';
 import type { ExecutionLogEntry } from '@/features/editor/components';
-import type { WorkflowNode, WorkflowEdge } from '@/types';
+import type { WorkflowNode, WorkflowEdge, NodeExecutionStatus } from '@/types';
 import { BuiltInNodeType } from '@/types';
 
 export function WorkflowEditorPage() {
   const { workflowId } = useParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const { nodes, edges, isDirty, setDirty } = useWorkflow();
+  const { nodes, edges, isDirty, setDirty, nodeStatuses, nodeOutputs, isExecuting } = useWorkflow();
   const { selectedNodeId, setNodes, setEdges } = useWorkflowStore();
   const { openDeployDialog } = useUIStore();
   const { reset } = useWorkflowStore();
@@ -24,6 +24,28 @@ export function WorkflowEditorPage() {
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isExecutionLogOpen, setIsExecutionLogOpen] = useState(false);
   const [executionLogs, setExecutionLogs] = useState<ExecutionLogEntry[]>([]);
+
+  // Sync node execution results to execution logs
+  useEffect(() => {
+    if (nodes.length === 0) return;
+
+    const logs: ExecutionLogEntry[] = nodes.map((node) => {
+      const status = nodeStatuses[node.id] || 'pending';
+      const output = nodeOutputs[node.id];
+
+      return {
+        nodeId: node.id,
+        nodeName: node.data.name || node.id,
+        nodeType: node.type,
+        status,
+        output: output as Record<string, unknown> | undefined,
+        startTime: undefined,
+        endTime: undefined,
+      };
+    });
+
+    setExecutionLogs(logs);
+  }, [nodes, nodeStatuses, nodeOutputs]);
 
   // Load workflow version when workflowId changes
   useEffect(() => {
