@@ -200,6 +200,35 @@ export function useWorkflow() {
     [store, updateNodeExecutionStatus, updateNodeOutput]
   );
 
+  const toggleBreakpoint = useCallback(
+    (nodeId: string) => {
+      store.toggleBreakpoint(nodeId);
+    },
+    [store]
+  );
+
+  const addBreakpoint = useCallback(
+    (nodeId: string) => {
+      store.addBreakpoint(nodeId);
+    },
+    [store]
+  );
+
+  const removeBreakpoint = useCallback(
+    (nodeId: string) => {
+      store.removeBreakpoint(nodeId);
+    },
+    [store]
+  );
+
+  const pauseExecution = useCallback(() => {
+    store.pauseExecution();
+  }, [store]);
+
+  const resumeExecution = useCallback(() => {
+    store.resumeExecution();
+  }, [store]);
+
   return {
     nodes: store.nodes,
     edges: store.edges,
@@ -209,9 +238,11 @@ export function useWorkflow() {
     selectedEdge,
     isDirty: store.isDirty,
     isExecuting: store.isExecuting,
+    isPaused: store.isPaused,
     currentExecutingNodeId: store.currentExecutingNodeId,
     nodeStatuses: store.nodeStatuses,
     nodeOutputs: store.nodeOutputs,
+    breakpoints: store.breakpoints,
     addNode,
     updateNode,
     updateNodePosition,
@@ -227,10 +258,15 @@ export function useWorkflow() {
     selectEdge,
     startExecution,
     stopExecution,
+    pauseExecution,
+    resumeExecution,
     setCurrentExecutingNode,
     executeWorkflow,
     pollRunStatus,
     reset,
     setDirty,
+    toggleBreakpoint,
+    addBreakpoint,
+    removeBreakpoint,
   };
 }

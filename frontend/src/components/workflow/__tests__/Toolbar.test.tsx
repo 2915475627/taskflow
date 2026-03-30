@@ -7,6 +7,7 @@ import * as useWorkflowModule from '@/hooks/useWorkflow';
 vi.mock('lucide-react', () => ({
   Play: () => <span data-testid="play-icon">Play</span>,
   Square: () => <span data-testid="square-icon">Square</span>,
+  Pause: () => <span data-testid="pause-icon">Pause</span>,
   ZoomIn: () => <span data-testid="zoom-in-icon">ZoomIn</span>,
   ZoomOut: () => <span data-testid="zoom-out-icon">ZoomOut</span>,
   Maximize: () => <span data-testid="maximize-icon">Maximize</span>,
@@ -43,6 +44,8 @@ vi.mock('reactflow', () => ({
 describe('Toolbar', () => {
   const mockExecuteWorkflow = vi.fn();
   const mockStopExecution = vi.fn();
+  const mockPauseExecution = vi.fn();
+  const mockResumeExecution = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -51,8 +54,11 @@ describe('Toolbar', () => {
       nodes: [],
       edges: [],
       isExecuting: false,
+      isPaused: false,
       executeWorkflow: mockExecuteWorkflow,
       stopExecution: mockStopExecution,
+      pauseExecution: mockPauseExecution,
+      resumeExecution: mockResumeExecution,
     } as unknown as ReturnType<typeof useWorkflowModule.useWorkflow>);
   });
 
@@ -71,8 +77,11 @@ describe('Toolbar', () => {
       nodes: [],
       edges: [],
       isExecuting: true,
+      isPaused: false,
       executeWorkflow: mockExecuteWorkflow,
       stopExecution: mockStopExecution,
+      pauseExecution: mockPauseExecution,
+      resumeExecution: mockResumeExecution,
     } as unknown as ReturnType<typeof useWorkflowModule.useWorkflow>);
 
     render(<Toolbar />);
@@ -90,8 +99,11 @@ describe('Toolbar', () => {
       nodes: [],
       edges: [],
       isExecuting: true,
+      isPaused: false,
       executeWorkflow: mockExecuteWorkflow,
       stopExecution: mockStopExecution,
+      pauseExecution: mockPauseExecution,
+      resumeExecution: mockResumeExecution,
     } as unknown as ReturnType<typeof useWorkflowModule.useWorkflow>);
 
     render(<Toolbar />);

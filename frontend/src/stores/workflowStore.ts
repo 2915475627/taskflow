@@ -10,9 +10,11 @@ interface WorkflowState {
   isDirty: boolean;
   // Execution preview state
   isExecuting: boolean;
+  isPaused: boolean;
   currentExecutingNodeId: string | null;
   nodeStatuses: Record<string, NodeExecutionStatus>;
   nodeOutputs: Record<string, unknown>;
+  breakpoints: Set<string>;
   // Actions
   addNode: (node: WorkflowNode) => void;
   updateNode: (id: string, data: Partial<WorkflowNodeData>) => void;
@@ -31,7 +33,12 @@ interface WorkflowState {
   // Execution preview actions
   startExecution: () => void;
   stopExecution: () => void;
+  pauseExecution: () => void;
+  resumeExecution: () => void;
   setCurrentExecutingNode: (nodeId: string | null) => void;
+  addBreakpoint: (nodeId: string) => void;
+  removeBreakpoint: (nodeId: string) => void;
+  toggleBreakpoint: (nodeId: string) => void;
   reset: () => void;
 }
 
@@ -45,9 +52,11 @@ export const useWorkflowStore = create<WorkflowState>()(
         selectedEdgeId: null,
         isDirty: false,
         isExecuting: false,
+        isPaused: false,
         currentExecutingNodeId: null,
         nodeStatuses: {},
         nodeOutputs: {},
+        breakpoints: new Set<string>(),
 
         addNode: (node: WorkflowNode) => {
           set(
@@ -218,11 +227,57 @@ export const useWorkflowStore = create<WorkflowState>()(
         },
 
         stopExecution: () => {
-          set({ isExecuting: false, currentExecutingNodeId: null }, false, 'stopExecution');
+          set({ isExecuting: false, isPaused: false, currentExecutingNodeId: null }, false, 'stopExecution');
+        },
+
+        pauseExecution: () => {
+          set({ isPaused: true }, false, 'pauseExecution');
+        },
+
+        resumeExecution: () => {
+          set({ isPaused: false }, false, 'resumeExecution');
         },
 
         setCurrentExecutingNode: (nodeId: string | null) => {
           set({ currentExecutingNodeId: nodeId }, false, 'setCurrentExecutingNode');
+        },
+
+        addBreakpoint: (nodeId: string) => {
+          set(
+            (state) => ({
+              breakpoints: new Set(state.breakpoints).add(nodeId),
+            }),
+            false,
+            'addBreakpoint'
+          );
+        },
+
+        removeBreakpoint: (nodeId: string) => {
+          set(
+            (state) => {
+              const newBreakpoints = new Set(state.breakpoints);
+              newBreakpoints.delete(nodeId);
+              return { breakpoints: newBreakpoints };
+            },
+            false,
+            'removeBreakpoint'
+          );
+        },
+
+        toggleBreakpoint: (nodeId: string) => {
+          set(
+            (state) => {
+              const newBreakpoints = new Set(state.breakpoints);
+              if (newBreakpoints.has(nodeId)) {
+                newBreakpoints.delete(nodeId);
+              } else {
+                newBreakpoints.add(nodeId);
+              }
+              return { breakpoints: newBreakpoints };
+            },
+            false,
+            'toggleBreakpoint'
+          );
         },
 
         reset: () => {
@@ -234,9 +289,11 @@ export const useWorkflowStore = create<WorkflowState>()(
               selectedEdgeId: null,
               isDirty: false,
               isExecuting: false,
+              isPaused: false,
               currentExecutingNodeId: null,
               nodeStatuses: {},
               nodeOutputs: {},
+              breakpoints: new Set<string>(),
             },
             false,
             'reset'

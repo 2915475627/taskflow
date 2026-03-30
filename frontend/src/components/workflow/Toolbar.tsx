@@ -1,7 +1,7 @@
 import { useCallback, useState, useEffect } from 'react';
 import { useReactFlow } from 'reactflow';
 import { Button } from '@/components/ui';
-import { Play, Square, ZoomIn, ZoomOut, Maximize, Move } from 'lucide-react';
+import { Play, Square, Pause, ZoomIn, ZoomOut, Maximize, Move } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWorkflow } from '@/hooks';
 import { AddNodeMenu } from './AddNodeMenu';
@@ -13,7 +13,7 @@ interface ToolbarProps {
 
 export function Toolbar({ className, workflowId }: ToolbarProps) {
   const { zoomIn, zoomOut, fitView, getViewport } = useReactFlow();
-  const { isExecuting, executeWorkflow, stopExecution } = useWorkflow();
+  const { isExecuting, isPaused, executeWorkflow, stopExecution, pauseExecution, resumeExecution } = useWorkflow();
   const [zoomPercent, setZoomPercent] = useState(100);
 
   // Update zoom percentage when viewport changes
@@ -85,15 +85,38 @@ export function Toolbar({ className, workflowId }: ToolbarProps) {
             <Play className="h-4 w-4" />
           </Button>
         ) : (
-          <Button
-            variant="destructive"
-            size="icon"
-            className="h-8 w-8"
-            onClick={stopExecution}
-            title="Stop execution"
-          >
-            <Square className="h-4 w-4" />
-          </Button>
+          <>
+            {isPaused ? (
+              <Button
+                variant="default"
+                size="icon"
+                className="h-8 w-8"
+                onClick={resumeExecution}
+                title="Resume execution"
+              >
+                <Play className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={pauseExecution}
+                title="Pause execution"
+              >
+                <Pause className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="destructive"
+              size="icon"
+              className="h-8 w-8"
+              onClick={stopExecution}
+              title="Stop execution"
+            >
+              <Square className="h-4 w-4" />
+            </Button>
+          </>
         )}
       </div>
 

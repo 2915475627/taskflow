@@ -41,6 +41,8 @@ export function WorkflowCanvas({ className, workflowId }: WorkflowCanvasProps) {
     removeNode,
     removeEdge,
     addEdge: addStoreEdge,
+    breakpoints,
+    toggleBreakpoint,
   } = useWorkflowStore();
 
   // Use local state that syncs with ReactFlow
@@ -120,13 +122,15 @@ export function WorkflowCanvas({ className, workflowId }: WorkflowCanvasProps) {
     [selectNode, selectEdge]
   );
 
-  // Add selected state to nodes
+  // Add selected state and breakpoint info to nodes
   const nodesWithSelection = useMemo(() => {
     return nodes.map((node) => ({
       ...node,
       selected: node.id === selectedNodeId,
+      hasBreakpoint: breakpoints.has(node.id),
+      onToggleBreakpoint: toggleBreakpoint,
     }));
-  }, [nodes, selectedNodeId]);
+  }, [nodes, selectedNodeId, breakpoints, toggleBreakpoint]);
 
   // Style edges
   const styledEdges = useMemo(() => {
