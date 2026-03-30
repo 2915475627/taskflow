@@ -1,5 +1,23 @@
 # 迭代记录
 
+## Iteration-011 (2026-03-30)
+
+**状态**: ✅ 完成
+
+### 目标
+E2E测试: Webhook触发器和定时调度
+
+### 步骤
+1. 创建workflow-triggers.spec.ts E2E测试文件
+2. 编写6个E2E测试用例
+3. 验证所有41个E2E测试通过
+
+### 产出
+- workflow-triggers.spec.ts: 6 E2E tests
+- E2E测试: 35 -> 41
+
+---
+
 ## Iteration-010 (2026-03-30)
 
 **状态**: ✅ 完成
@@ -176,10 +194,11 @@ ExpressionEngine.java修复（从Iteration-008恢复并增强）:
 |------|------|------|
 | 后端 | 160  | 160  |
 | 前端 | 197  | 197  |
-| E2E  | 35   | 35   |
-| **合计** | **392** | **392** |
+| E2E  | 41   | 41   |
+| **合计** | **398** | **398** |
 
 ### Push记录
+- Iteration-011: E2E测试Webhook触发和定时调度 (17:55)
 - Iteration-010: 前端定时调度配置UI (17:53)
 - Iteration-009: 前端Webhook触发器UI (17:46)
 - Iteration-008: Transform节点使用表达式引擎 (16:42)
@@ -191,4 +210,4 @@ ExpressionEngine.java修复（从Iteration-008恢复并增强）:
 ### 下一步
 - [x] 前端Webhook触发器UI
 - [x] 前端定时任务调度UI
-- [ ] E2E测试: Webhook触发和定时调度
+- [x] E2E测试: Webhook触发和定时调度
