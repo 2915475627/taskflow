@@ -1,5 +1,28 @@
 # 迭代记录
 
+## Iteration-008 (2026-03-30)
+
+**状态**: ✅ 完成
+
+### 目标
+实现Transform节点类型使用表达式引擎
+
+### 步骤
+1. 添加TRANSFORM节点类型到NodeType枚举
+2. 创建TransformNodeExecutor使用ExpressionEngine
+3. 实现数据转换配置(mappings)
+4. 支持字符串模板、数学表达式、条件表达式
+5. 创建9个TransformNodeExecutor测试
+
+### 产出
+- NodeType.TRANSFORM: 新节点类型
+- TransformNodeExecutor: 数据转换执行器
+- TransformNodeExecutorTest: 9 tests
+- ExpressionEngine改进: 字符串连接、模板求值、空值处理
+- 后端测试: 151 -> 160
+
+---
+
 ## Iteration-007 (2026-03-30)
 
 **状态**: ✅ 完成
@@ -100,12 +123,13 @@
 ### 测试结果
 | 类型 | 通过 | 总计 |
 |------|------|------|
-| 后端 | 151  | 151  |
+| 后端 | 160  | 160  |
 | 前端 | 183  | 183  |
 | E2E  | 35   | 35   |
-| **合计** | **369** | **369** |
+| **合计** | **378** | **378** |
 
 ### Push记录
+- Iteration-008: Transform节点使用表达式引擎 (16:42)
 - Iteration-007: 表达式引擎独立服务 (16:35)
 - Iteration-006: 定时任务调度后端支持 (16:30)
 - Iteration-005: Webhook触发器后端支持 (16:15)

@@ -1,5 +1,7 @@
 package com.taskflow.model;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * Built-in node types for workflow builder.
  *
@@ -13,6 +15,7 @@ public enum NodeType {
     HTTP_REQUEST("httpRequest", "Make HTTP calls with configurable method, URL, headers, and body."),
     MCP_CALL("mcpCall", "Call MCP (Model Context Protocol) tools with server name, tool name, and arguments."),
     CONDITION("condition", "Branch workflow based on conditions. Evaluates field comparisons with AND/OR logic."),
+    TRANSFORM("transform", "Transform data using expressions. Maps input fields to output using expression templates."),
     DELAY("delay", "Pause execution for a specified duration before continuing to the next node.");
 
     private final String value;
@@ -23,6 +26,7 @@ public enum NodeType {
         this.description = description;
     }
 
+    @JsonValue
     public String getValue() { return value; }
     public String getDescription() { return description; }
 
